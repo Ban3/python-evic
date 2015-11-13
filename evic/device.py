@@ -221,9 +221,10 @@ class VTCMini():
             AssertionError: Verification failed.
 
         """
-        assert b'Joyetech APROM' in self.aprom, "Firmware verification failed"
+        assert b'Joyetech APROM' in self.aprom,\
+            "Firmware manufacturer verification failed"
         assert bytearray(self.device_name) in self.aprom,\
-            "Hardware version verification failed"
+            "Firmware device name verification failed"
 
     def upload_aprom(self):
         """Writes APROM to the the device.

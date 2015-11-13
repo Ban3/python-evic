@@ -67,7 +67,7 @@ class VTCMini():
         aprom: Unencrypted firmware file in a bytearray.
         device: PyUSB device for the VTC Mini.
         data_flash: An array of bytes.
-        device_name: An array containing device name.
+        device_name: A bytestring containing device name.
         df_checksum: An integer checksum for data flash.
         hw_version: A float hardware version.
         fw_version: A float firmware version.
@@ -161,7 +161,7 @@ class VTCMini():
 
         self.data_flash = self.read_data(end)
 
-        self.device_name = self.data_flash[316:316+4]
+        self.device_name = self.data_flash[316:316+4].tostring()
         self.hw_version = struct.unpack("=I", self.data_flash[8:8+4])[0] / 100
         self.fw_version = struct.unpack("=I",
                                         self.data_flash[260:260+4])[0] / 100
@@ -223,7 +223,7 @@ class VTCMini():
         """
         assert b'Joyetech APROM' in self.aprom,\
             "Firmware manufacturer verification failed"
-        assert bytearray(self.device_name) in self.aprom,\
+        assert self.device_name in self.aprom,\
             "Firmware device name verification failed"
 
     def upload_aprom(self):

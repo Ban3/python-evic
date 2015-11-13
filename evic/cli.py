@@ -70,7 +70,7 @@ def main():
         print("Reading data flash...\n")
         dev.get_sys_data()
 
-        if dev.device_name.tostring() == b'E052':
+        if dev.device_name == b'E052':
             devicename = "eVic-VTC Mini"
         else:
             devicename = "Unknown device"

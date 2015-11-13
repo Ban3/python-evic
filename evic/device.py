@@ -31,7 +31,7 @@ class Cmd():
     Available HID command codes:
         0x35: Read data flash.
         0x53: Write data flash.
-        0x83: Reset device.
+        0xB4: Reset device.
         0xC3: Write APROM.
 
     Attributes:
@@ -227,7 +227,7 @@ class VTCMini():
             "Firmware device name verification failed"
 
     def upload_aprom(self):
-        """Writes APROM to the the device.
+        """Writes APROM to the the device. (0xC3)
 
         Raises:
             AssertionError: Incorrect amount of bytes was written.

@@ -28,7 +28,7 @@ import evic
 
 
 def main():
-    parser = argparse.ArgumentParser(description='evic')
+    parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
 
     parser_upload = subparsers.add_parser('upload',

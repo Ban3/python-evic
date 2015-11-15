@@ -111,10 +111,10 @@ def main():
                 sleep(2)
                 dev.attach()
 
-                dev.verify_aprom(aprom.data)
+                dev.verify_aprom(aprom)
 
                 print("Uploading APROM...\n")
-                dev.upload_aprom(aprom.data)
+                dev.upload_aprom(aprom)
                 print("Firmware upload complete!")
 
     except AssertionError as e:

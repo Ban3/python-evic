@@ -188,33 +188,33 @@ class VTCMini():
         """Verifies that the unencrypted APROM is correct
 
         Args:
-            aprom: A bytearray containing unencrypted APROM image
+            aprom: A BinFile object containing unencrypted APROM image
 
         Raises:
             AssertionError: Verification failed.
 
         """
-        assert b'Joyetech APROM' in aprom,\
+        assert b'Joyetech APROM' in aprom.data,\
             "Firmware manufacturer verification failed"
-        assert self.device_name in aprom,\
+        assert self.device_name in aprom.data,\
             "Firmware device name verification failed"
 
     def upload_aprom(self, aprom):
         """Writes APROM to the the device. (0xC3)
 
         Args:
-            aprom: A bytearray containing unencrypted APROM image
+            aprom: A BinFile object containing unencrypted APROM image
 
         Raises:
             AssertionError: Incorrect amount of bytes was written.
 
         """
         start = 0
-        end = len(aprom)
+        end = len(aprom.data)
 
         cmd = Cmd(0xC3, start, end)
         assert self.send_cmd(cmd.fullcmd) == 18,\
             "Error: Sending write APROM command failed."
 
-        assert self.device.write(0x2, aprom, 1000000) == len(aprom),\
+        assert self.device.write(0x2, aprom.data, 1000000) == len(aprom.data),\
             "Error: APROM write failed"

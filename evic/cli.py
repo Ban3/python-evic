@@ -95,6 +95,9 @@ def main():
                     print("Reading data flash...\n")
                     dev.get_sys_data()
 
+                # Bootflag
+                # 0 = APROM
+                # 1 = LDROM
                 dev.data_flash[13] = 1
                 # Update checksum
                 checksum = struct.pack("=I",

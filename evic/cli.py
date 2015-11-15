@@ -34,6 +34,8 @@ def main():
     parser_upload = subparsers.add_parser('upload',
                                           help='Write firmware from INPUT into device.')
     parser_upload.add_argument('input', type=argparse.FileType('rb'))
+    parser_upload.add_argument('--unencrypted', '-u', action='store_true',
+                               help='Use unencrypted firmware image.')
     parser_upload.set_defaults(which='upload')
 
     parser_decrypt = subparsers.add_parser('decrypt',
@@ -49,12 +51,16 @@ def main():
     args = parser.parse_args()
 
     dev = evic.VTCMini()
-    dev.read_binfile(args.input)
-    dev.decrypt()
+    binfile = evic.BinFile(args.input.read())
+
+    if args.which == 'decrypt' or not args.unencrypted:
+        aprom = evic.BinFile(binfile.decrypt())
+    else:
+        aprom = binfile
 
     if args.which == 'decrypt':
         try:
-            args.output.write(dev.aprom)
+            args.output.write(aprom.data)
         except IOError:
             print("Error: Can't write decrypted file.")
         sys.exit()
@@ -102,10 +108,10 @@ def main():
                 sleep(2)
                 dev.attach()
 
-                dev.verify_aprom()
+                dev.verify_aprom(aprom.data)
 
                 print("Uploading APROM...\n")
-                dev.upload_aprom()
+                dev.upload_aprom(aprom.data)
                 print("Firmware upload complete!")
 
     except AssertionError as e:

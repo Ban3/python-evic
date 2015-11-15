@@ -22,3 +22,4 @@ __version__ = '0.1.dev0'
 
 from .device import VTCMini
 from .helpers import cal_checksum
+from .binfile import BinFile

@@ -63,8 +63,6 @@ class VTCMini():
     Attributes:
         vid = USB vendor ID as an integer.
         pid = USB product ID as an integer.
-        binfile: Encrypted firmware file in a bytearray.
-        aprom: Unencrypted firmware file in a bytearray.
         device: PyUSB device for the VTC Mini.
         data_flash: An array of bytes.
         device_name: A bytestring containing device name.
@@ -78,40 +76,12 @@ class VTCMini():
     pid = 0x5020
 
     def __init__(self):
-        self.binfile = None
-        self.aprom = None
         self.device = None
         self.data_flash = None
         self.device_name = None
         self.df_checksum = None
         self.hw_version = None
         self.fw_version = None
-
-    def read_binfile(self, binfile):
-        """Reads an encrypted binary file to the attribute binfile
-
-        Args:
-            binfile: binary file object
-        """
-        self.binfile = binfile.read()
-
-    def _genfun(self, filesize, index):
-        """Generator function for decrypting the binary file
-
-        Args:
-            filesize: An integer, filesize of the binary file
-            index: An integer, index of the byte that is being decrypted
-
-        """
-        return filesize + 408376 + index - filesize // 408376
-
-    def decrypt(self):
-        """ Decrypts the binary file into the attribute aprom.
-        """
-        self.aprom = bytearray(len(self.binfile))
-        for i in range(0, len(self.binfile)):
-            self.aprom[i] = (self.binfile[i] ^
-                             self._genfun(len(self.binfile), i)) & 0xFF
 
     def attach(self):
         """Detaches kernel drivers from the device and claims it
@@ -214,31 +184,37 @@ class VTCMini():
         assert self.send_cmd(cmd.fullcmd) == 18,\
             "Error: Sending reset command failed."
 
-    def verify_aprom(self):
+    def verify_aprom(self, aprom):
         """Verifies that the unencrypted APROM is correct
+
+        Args:
+            aprom: A bytearray containing unencrypted APROM image
 
         Raises:
             AssertionError: Verification failed.
 
         """
-        assert b'Joyetech APROM' in self.aprom,\
+        assert b'Joyetech APROM' in aprom,\
             "Firmware manufacturer verification failed"
-        assert self.device_name in self.aprom,\
+        assert self.device_name in aprom,\
             "Firmware device name verification failed"
 
-    def upload_aprom(self):
+    def upload_aprom(self, aprom):
         """Writes APROM to the the device. (0xC3)
+
+        Args:
+            aprom: A bytearray containing unencrypted APROM image
 
         Raises:
             AssertionError: Incorrect amount of bytes was written.
 
         """
         start = 0
-        end = len(self.aprom)
+        end = len(aprom)
 
         cmd = Cmd(0xC3, start, end)
         assert self.send_cmd(cmd.fullcmd) == 18,\
             "Error: Sending write APROM command failed."
 
-        assert self.device.write(0x2, self.aprom, 1000000) == len(self.aprom),\
+        assert self.device.write(0x2, aprom, 1000000) == len(aprom),\
             "Error: APROM write failed"

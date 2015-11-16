@@ -26,7 +26,7 @@ class BinFile():
 
     """
     def __init__(self, data):
-        self.data = data
+        self.data = bytearray(data)
 
     @staticmethod
     def _genfun(filesize, index):

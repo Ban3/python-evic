@@ -35,25 +35,26 @@ class Cmd():
         0xC3: Write APROM.
 
     Attributes:
-        cmd: A bytes object for HID command code (1 byte)
-        length: A bytes object for HID command length (1 byte)
-        arg1: A bytes object for the first HID command argument (4 bytes)
-        arg2: A bytes object for the second HID command argument (4 bytes)
-        signature: A bytes object for HID command signature (4 bytes)
-        checksum: A bytes object for the checksum of the HID command (4 bytes)
-        fullcmd: A bytes object for the full command (18 bytes)
+        cmd: A bytearray object for HID command code (1 byte)
+        length: A bytearray object for HID command length (1 byte)
+        arg1: A bytearray object for the first HID command argument (4 bytes)
+        arg2: A bytearray object for the second HID command argument (4 bytes)
+        signature: A bytearray object for HID command signature (4 bytes)
+        checksum: A bytearray object for the checksum of the HID command (4 bytes)
+        fullcmd: A bytearray object for the full command (18 bytes)
     """
 
-    signature = struct.pack('=I', 0x43444948)
-    length = struct.pack('=B', 14)  # Do not count the last 4 bytes (checksum)
+    signature = bytearray(struct.pack('=I', 0x43444948))
+    # Do not count the last 4 bytes (checksum)
+    length = bytearray(struct.pack('=B', 14))
 
     def __init__(self, cmd, arg1, arg2):
-        self.cmd = struct.pack('=B', cmd)
-        self.arg1 = struct.pack('=I', arg1)
-        self.arg2 = struct.pack('=I', arg2)
+        self.cmd = bytearray(struct.pack('=B', cmd))
+        self.arg1 = bytearray(struct.pack('=I', arg1))
+        self.arg2 = bytearray(struct.pack('=I', arg2))
         self.fullcmd = self.cmd + self.length + self.arg1 + self.arg2 +\
             self.signature
-        self.checksum = struct.pack('=I', cal_checksum(self.fullcmd))
+        self.checksum = bytearray(struct.pack('=I', cal_checksum(self.fullcmd)))
         self.fullcmd += self.checksum
 
 
@@ -103,7 +104,7 @@ class VTCMini():
         Writes a HID command to the device.
 
         Args:
-            cmd: A bytes object for the HID command in the form of
+            cmd: A bytearray object for the HID command in the form of
              Cmd.fullcommand
 
         Returns:

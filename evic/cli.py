@@ -100,8 +100,8 @@ def main():
                 # 1 = LDROM
                 dev.data_flash[13] = 1
                 # Update checksum
-                checksum = struct.pack("=I",
-                                       evic.cal_checksum(dev.data_flash[4:]))
+                checksum = bytearray(struct.pack("=I",
+                                       evic.cal_checksum(dev.data_flash[4:])))
                 for i in range(4):
                     dev.data_flash[i] = checksum[i]
                 print("Writing data flash...\n")

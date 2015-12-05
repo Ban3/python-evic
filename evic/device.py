@@ -22,6 +22,7 @@ import struct
 import usb.core
 import usb.util
 
+from array import array
 from .helpers import cal_checksum
 
 
@@ -114,25 +115,32 @@ class VTCMini(object):
         """
         return self.device.write(0x2, cmd, 1000)
 
-    def get_sys_data(self):
+    def get_sys_data(self, dataflash_file):
         """Sends the HID command for reading data flash (0x35)
 
         Writes the HID command to the device and reads 2048 bytes to the
         data_flash attribute. Sets relevant attributes from data flash.
+
+        Args:
+            dataflash_file: A file object containing data flash or None
 
         Raises:
             AssertionError: Correct amount of bytes was not written to the
              device. (18 bytes)
         """
 
-        start = 0
-        end = 2048
+        if dataflash_file:
+            self.data_flash = array('B')
+            self.data_flash.fromfile(dataflash_file, 2048)
+        else:
+            start = 0
+            end = 2048
 
-        cmd = Cmd(0x35, start, end)
-        assert self.send_cmd(cmd.fullcmd) == 18,\
-            "Error: Sending read data flash command failed."
+            cmd = Cmd(0x35, start, end)
+            assert self.send_cmd(cmd.fullcmd) == 18,\
+                "Error: Sending read data flash command failed."
 
-        self.data_flash = self.read_data(end)
+            self.data_flash = self.read_data(end)
 
         self.device_name = self.data_flash[316:316+4].tostring()
         self.hw_version = struct.unpack("=I",

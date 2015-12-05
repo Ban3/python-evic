@@ -38,6 +38,10 @@ def main():
     parser_upload.add_argument('input', type=argparse.FileType('rb'))
     parser_upload.add_argument('--unencrypted', '-u', action='store_true',
                                help='Use unencrypted firmware image.')
+    parser_upload.add_argument('--dataflash', '-d',
+                               type=argparse.FileType('rb'),
+                               help='Use data flash file insted the one on \
+                               the device')
     parser_upload.set_defaults(which='upload')
 
     parser_decrypt = subparsers.add_parser('decrypt',
@@ -84,7 +88,10 @@ def main():
         print("\tSerial No: {0}\n".format(dev.device.serial_number))
 
         print("Reading data flash...\n")
-        dev.get_sys_data()
+        if args.dataflash:
+            dev.get_sys_data(args.dataflash)
+        else:
+            dev.get_sys_data(None)
 
         if dev.device_name == b'E052':
             devicename = "eVic-VTC Mini"
@@ -104,7 +111,8 @@ def main():
             if struct.unpack("=I", dev.data_flash[264:264+4]) == 0 \
                     or not dev.fw_version:
                 print("Reading data flash...\n")
-                dev.get_sys_data()
+                if not args.dataflash:
+                    dev.get_sys_data(None)
 
             if args.which == 'dump-dataflash':
                 try:

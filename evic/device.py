@@ -133,9 +133,9 @@ class VTCMini(object):
         self.data_flash = self.read_data(end)
 
         self.device_name = self.data_flash[316:316+4].tostring()
-        self.hw_version = struct.unpack("=I", self.data_flash[8:8+4])[0] / 100
+        self.hw_version = struct.unpack("=I", self.data_flash[8:8+4])[0] / 100.0
         self.fw_version = struct.unpack("=I",
-                                        self.data_flash[260:260+4])[0] / 100
+                                        self.data_flash[260:260+4])[0] / 100.0
         self.df_checksum = struct.unpack("=I", self.data_flash[0:4])[0]
 
     def read_data(self, count):

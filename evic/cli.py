@@ -48,25 +48,32 @@ def main():
                                 required=True)
     parser_decrypt.set_defaults(which='decrypt')
 
+    parser_decrypt = subparsers.add_parser('dump-dataflash',
+                                           help='Dump dataflash to OUTPUT')
+    parser_decrypt.add_argument('--output', '-o', type=argparse.FileType('wb'),
+                                required=True)
+    parser_decrypt.set_defaults(which='dump-dataflash')
+
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit()
     args = parser.parse_args()
 
     dev = evic.VTCMini()
-    binfile = evic.BinFile(args.input.read())
+    if args.which in ['upload', 'decrypt']:
+        binfile = evic.BinFile(args.input.read())
 
-    if args.which == 'decrypt' or not args.unencrypted:
-        aprom = evic.BinFile(binfile.decrypt())
-    else:
-        aprom = binfile
+        if args.which == 'decrypt' or not args.unencrypted:
+            aprom = evic.BinFile(binfile.decrypt())
+        else:
+            aprom = binfile
 
-    if args.which == 'decrypt':
-        try:
-            args.output.write(aprom.data)
-        except IOError:
-            print("Error: Can't write decrypted file.")
-        sys.exit()
+        if args.which == 'decrypt':
+            try:
+                args.output.write(aprom.data)
+            except IOError:
+                print("Error: Can't write decrypted file.")
+            sys.exit()
 
     try:
         dev.attach()
@@ -98,6 +105,13 @@ def main():
                     or not dev.fw_version:
                 print("Reading data flash...\n")
                 dev.get_sys_data()
+
+            if args.which == 'dump-dataflash':
+                try:
+                    args.output.write(dev.data_flash)
+                except IOError:
+                    print("Error: Can't write data flash file.")
+                sys.exit()
 
             # Bootflag
             # 0 = APROM

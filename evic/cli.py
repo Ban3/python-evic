@@ -33,14 +33,16 @@ def main():
     subparsers = parser.add_subparsers()
 
     parser_upload = subparsers.add_parser('upload',
-                                          help='Write firmware from INPUT into device.')
+                                          help='Write firmware from INPUT \
+                                          into device.')
     parser_upload.add_argument('input', type=argparse.FileType('rb'))
     parser_upload.add_argument('--unencrypted', '-u', action='store_true',
                                help='Use unencrypted firmware image.')
     parser_upload.set_defaults(which='upload')
 
     parser_decrypt = subparsers.add_parser('decrypt',
-                                           help='Decrypt firmware from INPUT to OUTPUT.')
+                                           help='Decrypt firmware from INPUT \
+                                           to OUTPUT.')
     parser_decrypt.add_argument('input', type=argparse.FileType('rb'))
     parser_decrypt.add_argument('--output', '-o', type=argparse.FileType('wb'),
                                 required=True)
@@ -92,7 +94,8 @@ def main():
             if dev.hw_version > 1000:
                 print("Please set the hardware version.\n")
 
-            if struct.unpack("=I", dev.data_flash[264:264+4]) == 0 or not dev.fw_version:
+            if struct.unpack("=I", dev.data_flash[264:264+4]) == 0 \
+                    or not dev.fw_version:
                 print("Reading data flash...\n")
                 dev.get_sys_data()
 
@@ -102,7 +105,8 @@ def main():
             dev.data_flash[13] = 1
             # Update checksum
             checksum = bytearray(struct.pack("=I",
-                                             evic.cal_checksum(dev.data_flash[4:])))
+                                             evic.cal_checksum(
+                                                 dev.data_flash[4:])))
             for i in range(4):
                 dev.data_flash[i] = checksum[i]
             print("Writing data flash...\n")
@@ -118,6 +122,6 @@ def main():
             dev.upload_aprom(aprom)
             print("Firmware upload complete!")
 
-    except AssertionError as e:
-        print(e)
+    except AssertionError as error:
+        print(error)
         sys.exit()

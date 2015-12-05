@@ -40,7 +40,8 @@ class Cmd(object):
         arg1: A bytearray object for the first HID command argument (4 bytes)
         arg2: A bytearray object for the second HID command argument (4 bytes)
         signature: A bytearray object for HID command signature (4 bytes)
-        checksum: A bytearray object for the checksum of the HID command (4 bytes)
+        checksum: A bytearray object for the checksum of the HID command
+                  (4 bytes)
         fullcmd: A bytearray object for the full command (18 bytes)
     """
 
@@ -54,7 +55,8 @@ class Cmd(object):
         self.arg2 = bytearray(struct.pack('=I', arg2))
         self.fullcmd = self.cmd + self.length + self.arg1 + self.arg2 +\
             self.signature
-        self.checksum = bytearray(struct.pack('=I', cal_checksum(self.fullcmd)))
+        self.checksum = bytearray(struct.pack('=I',
+                                              cal_checksum(self.fullcmd)))
         self.fullcmd += self.checksum
 
 
@@ -133,7 +135,8 @@ class VTCMini(object):
         self.data_flash = self.read_data(end)
 
         self.device_name = self.data_flash[316:316+4].tostring()
-        self.hw_version = struct.unpack("=I", self.data_flash[8:8+4])[0] / 100.0
+        self.hw_version = struct.unpack("=I",
+                                        self.data_flash[8:8+4])[0] / 100.0
         self.fw_version = struct.unpack("=I",
                                         self.data_flash[260:260+4])[0] / 100.0
         self.df_checksum = struct.unpack("=I", self.data_flash[0:4])[0]

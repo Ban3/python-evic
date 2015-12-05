@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Evic decrypts Joyetech Evic firmware images and uploads them using USB.

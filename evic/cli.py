@@ -69,9 +69,9 @@ def main():
         dev.attach()
 
         print("\nFound device:")
-        print("\tManufacturer: %s" % dev.device.manufacturer)
-        print("\tProduct: %s" % dev.device.product)
-        print("\tSerial No: %s\n" % dev.device.serial_number)
+        print("\tManufacturer: {0}".format(dev.device.manufacturer))
+        print("\tProduct: {0}".format(dev.device.product))
+        print("\tSerial No: {0}\n".format(dev.device.serial_number))
 
         print("Reading data flash...\n")
         dev.get_sys_data()
@@ -81,9 +81,9 @@ def main():
         else:
             devicename = "Unknown device"
 
-        print("\tDevice name: %s" % devicename)
-        print("\tFirmware version: %.2f" % dev.fw_version)
-        print("\tHardware version: %.2f\n" % dev.hw_version)
+        print("\tDevice name: {0}".format(devicename))
+        print("\tFirmware version: {0:.2f}".format(dev.fw_version))
+        print("\tHardware version: {0:.2f}\n".format(dev.hw_version))
 
         if evic.cal_checksum(dev.data_flash[4:]) == dev.df_checksum and \
                 dev.df_checksum | struct.unpack("=I",

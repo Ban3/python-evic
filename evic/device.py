@@ -25,7 +25,7 @@ import usb.util
 from .helpers import cal_checksum
 
 
-class Cmd():
+class Cmd(object):
     """Nuvoton HID command class
 
     Available HID command codes:
@@ -58,7 +58,7 @@ class Cmd():
         self.fullcmd += self.checksum
 
 
-class VTCMini():
+class VTCMini(object):
     """Evic VTC Mini
 
     Attributes:

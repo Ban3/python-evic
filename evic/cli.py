@@ -85,37 +85,37 @@ def main():
         print("\tFirmware version: %.2f" % dev.fw_version)
         print("\tHardware version: %.2f\n" % dev.hw_version)
 
-        if evic.cal_checksum(dev.data_flash[4:]) == dev.df_checksum:
-            if dev.df_checksum | struct.unpack("=I",
-                                               dev.data_flash[268:268+4])[0]:
-                if dev.hw_version > 1000:
-                    print("Please set the hardware version.\n")
+        if evic.cal_checksum(dev.data_flash[4:]) == dev.df_checksum and \
+                dev.df_checksum | struct.unpack("=I",
+                                                dev.data_flash[268:268+4])[0]:
+            if dev.hw_version > 1000:
+                print("Please set the hardware version.\n")
 
-                if struct.unpack("=I", dev.data_flash[264:264+4]) == 0 or not dev.fw_version:
-                    print("Reading data flash...\n")
-                    dev.get_sys_data()
+            if struct.unpack("=I", dev.data_flash[264:264+4]) == 0 or not dev.fw_version:
+                print("Reading data flash...\n")
+                dev.get_sys_data()
 
-                # Bootflag
-                # 0 = APROM
-                # 1 = LDROM
-                dev.data_flash[13] = 1
-                # Update checksum
-                checksum = bytearray(struct.pack("=I",
-                                       evic.cal_checksum(dev.data_flash[4:])))
-                for i in range(4):
-                    dev.data_flash[i] = checksum[i]
-                print("Writing data flash...\n")
-                sleep(2)
-                dev.set_sys_data()
-                dev.reset_system()
-                sleep(2)
-                dev.attach()
+            # Bootflag
+            # 0 = APROM
+            # 1 = LDROM
+            dev.data_flash[13] = 1
+            # Update checksum
+            checksum = bytearray(struct.pack("=I",
+                                             evic.cal_checksum(dev.data_flash[4:])))
+            for i in range(4):
+                dev.data_flash[i] = checksum[i]
+            print("Writing data flash...\n")
+            sleep(2)
+            dev.set_sys_data()
+            dev.reset_system()
+            sleep(2)
+            dev.attach()
 
-                dev.verify_aprom(aprom)
+            dev.verify_aprom(aprom)
 
-                print("Uploading APROM...\n")
-                dev.upload_aprom(aprom)
-                print("Firmware upload complete!")
+            print("Uploading APROM...\n")
+            dev.upload_aprom(aprom)
+            print("Firmware upload complete!")
 
     except AssertionError as e:
         print(e)

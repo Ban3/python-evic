@@ -28,6 +28,8 @@ import evic
 
 
 def main():
+    """Console application's main entry point"""
+
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
 

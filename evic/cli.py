@@ -25,6 +25,8 @@ from time import sleep
 
 import evic
 
+DEVICE_NAMES = {b'E052': "eVic-VTC Mini", b'W007': "Presa TC75W"}
+
 
 def main():
     """Console application's main entry point"""
@@ -93,8 +95,8 @@ def main():
         else:
             dev.get_sys_data(None)
 
-        if dev.device_name == b'E052':
-            devicename = "eVic-VTC Mini"
+        if dev.device_name in DEVICE_NAMES:
+            devicename = DEVICE_NAMES[dev.device_name]
         else:
             devicename = "Unknown device"
 
@@ -125,12 +127,22 @@ def main():
             # 0 = APROM
             # 1 = LDROM
             dev.data_flash[13] = 1
-            # Update checksum
+
+            # Flashing Presa firmware requires HW version 1.03
+            if b'W007' in aprom.data and dev.device_name == b'E052' and \
+                    dev.hw_version > 1.03:
+                print("Changing HW version to 1.03..\n")
+                new_hw_version = struct.pack("=I", 103)
+                for i in range(4):
+                    dev.data_flash[8+i] = new_hw_version[i]
+
+            # Calculate new checksum
             checksum = bytearray(struct.pack("=I",
                                              evic.cal_checksum(
                                                  dev.data_flash[4:])))
             for i in range(4):
                 dev.data_flash[i] = checksum[i]
+
             print("Writing data flash...\n")
             sleep(2)
             dev.set_sys_data()
@@ -138,7 +150,11 @@ def main():
             sleep(2)
             dev.attach()
 
-            dev.verify_aprom(aprom)
+            try:
+                dev.verify_aprom(aprom)
+            except evic.FirmwareException as error:
+                print(error)
+                sys.exit()
 
             print("Uploading APROM...\n")
             dev.upload_aprom(aprom)

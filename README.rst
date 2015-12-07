@@ -15,5 +15,8 @@ Supported devices
 Tested firmware versions
 --------
 
-* 1.10
-* 2.00
+* Evic VTC Mini 1.10
+* Evic VTC Mini 1.20
+* Evic VTC Mini 1.30
+* Evic VTC Mini 2.00
+* Presa TC75W 1.02

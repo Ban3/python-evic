@@ -25,6 +25,12 @@ import usb.util
 from .helpers import cal_checksum
 
 
+class FirmwareException(Exception):
+    """Exception for firmware verification"""
+
+    pass
+
+
 class Cmd(object):
     """Nuvoton HID command class
 
@@ -66,6 +72,8 @@ class VTCMini(object):
     Attributes:
         vid = USB vendor ID as an integer.
         pid = USB product ID as an integer.
+        supported_device_names: A list of bytestrings containing the name of
+                                the product with compatible firmware
         device: PyUSB device for the VTC Mini.
         data_flash: An array of bytes.
         device_name: A bytestring containing device name.
@@ -77,6 +85,7 @@ class VTCMini(object):
 
     vid = 0x0416
     pid = 0x5020
+    supported_device_names = [b'E052', b'W007']
 
     def __init__(self):
         self.device = None
@@ -198,10 +207,13 @@ class VTCMini(object):
             AssertionError: Verification failed.
 
         """
-        assert b'Joyetech APROM' in aprom.data,\
-            "Firmware manufacturer verification failed"
-        assert self.device_name in aprom.data,\
-            "Firmware device name verification failed"
+        if b'Joyetech APROM' not in aprom.data:
+            raise FirmwareException(
+                "Firmware manufacturer verification failed")
+        for device_name in self.supported_device_names:
+            if device_name in aprom.data:
+                return
+        raise FirmwareException("Firmware device name verification failed")
 
     def upload_aprom(self, aprom):
         """Writes APROM to the the device. (0xC3)

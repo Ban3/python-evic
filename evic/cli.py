@@ -102,7 +102,7 @@ def main():
 
         print("\tDevice name: {0}".format(devicename))
         print("\tFirmware version: {0:.2f}".format(dev.fw_version))
-        print("\tHardware version: {0:.2f}\n".format(dev.hw_version))
+        print("\tHardware version: {0:.2f}\n".format(dev.hw_version / 100.0))
 
         if evic.cal_checksum(dev.data_flash[4:]) == dev.df_checksum and \
                 dev.df_checksum | struct.unpack("=I",
@@ -130,9 +130,9 @@ def main():
 
             # Flashing Presa firmware requires HW version 1.03
             if b'W007' in aprom.data and dev.device_name == b'E052' and \
-                    dev.hw_version > 1.03:
+                    dev.hw_version in [106, 108, 109, 111]:
                 print("Changing HW version to 1.03..\n")
-                new_hw_version = struct.pack("=I", 103)
+                new_hw_version = bytearray(struct.pack("=I", 103))
                 for i in range(4):
                     dev.data_flash[8+i] = new_hw_version[i]
 

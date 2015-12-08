@@ -79,7 +79,7 @@ class VTCMini(object):
         data_flash: An array of bytes.
         device_name: A bytestring containing device name.
         df_checksum: An integer checksum for data flash.
-        hw_version: A float hardware version.
+        hw_version: An integer hardware version.
         fw_version: A float firmware version.
 
     """
@@ -153,7 +153,7 @@ class VTCMini(object):
 
         self.device_name = self.data_flash[316:316+4].tostring()
         self.hw_version = struct.unpack("=I",
-                                        self.data_flash[8:8+4])[0] / 100.0
+                                        self.data_flash[8:8+4])[0]
         self.fw_version = struct.unpack("=I",
                                         self.data_flash[260:260+4])[0] / 100.0
         self.df_checksum = struct.unpack("=I", self.data_flash[0:4])[0]

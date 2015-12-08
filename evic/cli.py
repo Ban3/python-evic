@@ -89,6 +89,12 @@ def main():
         print("\tProduct: {0}".format(dev.device.product))
         print("\tSerial No: {0}\n".format(dev.device.serial_number))
 
+        try:
+            dev.verify_aprom(aprom)
+        except evic.FirmwareException as error:
+            print(error)
+            sys.exit()
+
         print("Reading data flash...\n")
         if args.dataflash:
             dev.get_sys_data(args.dataflash)
@@ -149,12 +155,6 @@ def main():
             dev.reset_system()
             sleep(2)
             dev.attach()
-
-            try:
-                dev.verify_aprom(aprom)
-            except evic.FirmwareException as error:
-                print(error)
-                sys.exit()
 
             print("Uploading APROM...\n")
             dev.upload_aprom(aprom)

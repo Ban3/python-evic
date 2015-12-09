@@ -89,14 +89,15 @@ def main():
         print("\tProduct: {0}".format(dev.device.product))
         print("\tSerial No: {0}\n".format(dev.device.serial_number))
 
-        try:
-            dev.verify_aprom(aprom)
-        except evic.FirmwareException as error:
-            print(error)
-            sys.exit()
+        if args.which == 'upload':
+            try:
+                dev.verify_aprom(aprom)
+            except evic.FirmwareException as error:
+                print(error)
+                sys.exit()
 
         print("Reading data flash...\n")
-        if args.dataflash:
+        if args.which == 'upload' and args.dataflash:
             dev.get_sys_data(args.dataflash)
         else:
             dev.get_sys_data(None)
@@ -119,7 +120,9 @@ def main():
             if struct.unpack("=I", dev.data_flash[264:264+4]) == 0 \
                     or not dev.fw_version:
                 print("Reading data flash...\n")
-                if not args.dataflash:
+                if args.which == 'upload' and args.dataflash:
+                    dev.get_sys_data(args.dataflash)
+                else:
                     dev.get_sys_data(None)
 
             if args.which == 'dump-dataflash':

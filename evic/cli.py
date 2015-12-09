@@ -24,6 +24,7 @@ import argparse
 from time import sleep
 
 import evic
+import usb
 
 DEVICE_NAMES = {b'E052': "eVic-VTC Mini", b'W007': "Presa TC75W"}
 
@@ -155,9 +156,10 @@ def main():
             print("Writing data flash...\n")
             sleep(2)
             dev.set_sys_data()
-            dev.reset_system()
-            sleep(2)
-            dev.attach()
+            if dev.fw_version > 0:
+                dev.reset_system()
+                sleep(2)
+                dev.attach()
 
             print("Uploading APROM...\n")
             dev.upload_aprom(aprom)

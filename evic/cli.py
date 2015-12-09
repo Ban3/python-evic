@@ -128,6 +128,7 @@ def main():
 
             if args.which == 'dump-dataflash':
                 try:
+                    print("Writing data flash to the file...\n")
                     args.output.write(dev.data_flash)
                 except IOError:
                     print("Error: Can't write data flash file.")
@@ -141,7 +142,7 @@ def main():
             # Flashing Presa firmware requires HW version 1.03
             if b'W007' in aprom.data and dev.device_name == b'E052' and \
                     dev.hw_version in [106, 108, 109, 111]:
-                print("Changing HW version to 1.03..\n")
+                print("Changing HW version to 1.03...\n")
                 new_hw_version = bytearray(struct.pack("=I", 103))
                 for i in range(4):
                     dev.data_flash[8+i] = new_hw_version[i]
@@ -157,8 +158,10 @@ def main():
             sleep(2)
             dev.set_sys_data()
             if dev.fw_version > 0:
+                print("Restarting the device...\n")
                 dev.reset_system()
                 sleep(2)
+                print("Reconnecting the device...\n")
                 dev.attach()
 
             print("Uploading APROM...\n")

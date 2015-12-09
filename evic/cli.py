@@ -162,7 +162,8 @@ def main():
                 try:
                     dev.reset_system()
                 except usb.core.USBError:
-                    pass
+                    print("Restart failed. Assuming the device is already \
+                          restarted to LDROM\n")
                 sleep(2)
                 print("Reconnecting the device...\n")
                 dev.attach()

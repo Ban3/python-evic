@@ -24,7 +24,7 @@ import argparse
 from time import sleep
 
 import evic
-import usb
+import usb.core
 
 DEVICE_NAMES = {b'E052': "eVic-VTC Mini", b'W007': "Presa TC75W"}
 
@@ -159,7 +159,10 @@ def main():
             dev.set_sys_data()
             if dev.fw_version > 0:
                 print("Restarting the device...\n")
-                dev.reset_system()
+                try:
+                    dev.reset_system()
+                except usb.core.USBError:
+                    pass
                 sleep(2)
                 print("Reconnecting the device...\n")
                 dev.attach()

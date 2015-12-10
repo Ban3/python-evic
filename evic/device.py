@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Evic decrypts Joyetech Evic firmware images and uploads them using USB.
+Evic decrypts/encrypts Joyetech Evic firmware images and uploads them using USB.
 Copyright © Jussi Timperi
 
 This program is free software: you can redistribute it and/or modify

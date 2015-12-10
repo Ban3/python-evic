@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Evic decrypts Joyetech Evic firmware images and uploads them using USB.
+Evic decrypts/encrypts Joyetech Evic firmware images and uploads them using USB.
 Copyright © Jussi Timperi
 
 This program is free software: you can redistribute it and/or modify
@@ -35,7 +35,7 @@ setup(
     version="0.1",
     author="Jussi Timperi",
     author_email="jussi.timperi@iki.fi",
-    description=("A tool to decrypt and USB upload Evic firmware."),
+    description=("A tool to decrypt/encrypt and USB upload Evic firmware."),
     license="GPL",
     keywords="ecig electronic cigarette evic joyetech",
     url="https://github.com/Ban3/python-evic",

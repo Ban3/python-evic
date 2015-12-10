@@ -3,7 +3,7 @@ Evic
 ===============================
 
 
-Evic decrypts Joyetech Evic firmware images and uploads them using USB.
+Evic decrypts/encrypts Joyetech Evic firmware images and uploads them using USB.
 
 
 Supported devices

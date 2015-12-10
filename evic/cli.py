@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Evic decrypts Joyetech Evic firmware images and uploads them using USB.
+Evic decrypts/encryps Joyetech Evic firmware images and uploads them using USB.
 Copyright © Jussi Timperi
 
 This program is free software: you can redistribute it and/or modify
@@ -47,19 +47,21 @@ def main():
                                the device')
     parser_upload.set_defaults(which='upload')
 
-    parser_decrypt = subparsers.add_parser('decrypt',
-                                           help='Decrypt firmware from INPUT \
-                                           to OUTPUT.')
-    parser_decrypt.add_argument('input', type=argparse.FileType('rb'))
-    parser_decrypt.add_argument('--output', '-o', type=argparse.FileType('wb'),
+    parser_convert = subparsers.add_parser('convert',
+                                           help='Decrypt/Encrypt firmware \
+                                           from INPUT to OUTPUT.')
+    parser_convert.add_argument('input', type=argparse.FileType('rb'))
+    parser_convert.add_argument('--output', '-o', type=argparse.FileType('wb'),
                                 required=True)
-    parser_decrypt.set_defaults(which='decrypt')
+    parser_convert.set_defaults(which='convert')
 
-    parser_decrypt = subparsers.add_parser('dump-dataflash',
-                                           help='Dump dataflash to OUTPUT')
-    parser_decrypt.add_argument('--output', '-o', type=argparse.FileType('wb'),
-                                required=True)
-    parser_decrypt.set_defaults(which='dump-dataflash')
+    parser_dumpdataflash = subparsers.add_parser('dump-dataflash',
+                                                 help='Dump dataflash \
+                                                 to OUTPUT')
+    parser_dumpdataflash.add_argument('--output', '-o',
+                                      type=argparse.FileType('wb'),
+                                      required=True)
+    parser_dumpdataflash.set_defaults(which='dump-dataflash')
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -67,19 +69,19 @@ def main():
     args = parser.parse_args()
 
     dev = evic.VTCMini()
-    if args.which in ['upload', 'decrypt']:
+    if args.which in ['upload', 'convert']:
         binfile = evic.BinFile(args.input.read())
 
-        if args.which == 'decrypt' or not args.unencrypted:
-            aprom = evic.BinFile(binfile.decrypt())
+        if args.which == 'convert' or not args.unencrypted:
+            aprom = evic.BinFile(binfile.convert())
         else:
             aprom = binfile
 
-        if args.which == 'decrypt':
+        if args.which == 'convert':
             try:
                 args.output.write(aprom.data)
             except IOError:
-                print("Error: Can't write decrypted file.")
+                print("Error: Can't write converted file.")
             sys.exit()
 
     try:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Evic decrypts Joyetech Evic firmware images and uploads them using USB.
+Evic decrypts/encrypts Joyetech Evic firmware images and uploads them using USB.
 Copyright © Jussi Timperi
 
 This program is free software: you can redistribute it and/or modify
@@ -30,7 +30,7 @@ class BinFile(object):
 
     @staticmethod
     def _genfun(filesize, index):
-        """Generator function for decrypting the binary file
+        """Generator function for decrypting/encrypting the binary file
 
         Args:
             filesize: An integer, filesize of the binary file
@@ -39,11 +39,11 @@ class BinFile(object):
         """
         return filesize + 408376 + index - filesize // 408376
 
-    def decrypt(self):
-        """ Decrypts the binary data.
+    def convert(self):
+        """ Decrypts/Encrypts the binary data.
 
         Returns:
-            A Bytearray containing unencrypted APROM image
+            A Bytearray containing decrypted/encrypted APROM image
         """
         data = bytearray(len(self.data))
         for i in range(0, len(self.data)):

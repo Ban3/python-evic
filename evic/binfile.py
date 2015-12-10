@@ -18,6 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 
+class FirmwareException(Exception):
+    """Exception for firmware verification"""
+
+    pass
+
+
 class BinFile(object):
     """Firmware binary file
 
@@ -50,3 +56,21 @@ class BinFile(object):
             data[i] = (self.data[i] ^
                        self._genfun(len(self.data), i)) & 0xFF
         return data
+
+    def verify(self, product_names):
+        """Verifies that the unencrypted APROM is correct
+
+        Args:
+            product_names: A list of supported product names for the device
+
+        Raises:
+            FirmwareException: Verification failed.
+
+        """
+        if b'Joyetech APROM' not in self.data:
+            raise FirmwareException(
+                "Firmware manufacturer verification failed")
+        for name in product_names:
+            if name in self.data:
+                return
+        raise FirmwareException("Firmware device name verification failed")

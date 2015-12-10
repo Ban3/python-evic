@@ -26,10 +26,6 @@ from array import array
 from .helpers import cal_checksum
 
 
-class FirmwareException(Exception):
-    """Exception for firmware verification"""
-
-    pass
 
 
 class Cmd(object):
@@ -205,23 +201,6 @@ class VTCMini(object):
         assert self.send_cmd(cmd.fullcmd) == 18,\
             "Error: Sending reset command failed."
 
-    def verify_aprom(self, aprom):
-        """Verifies that the unencrypted APROM is correct
-
-        Args:
-            aprom: A BinFile object containing unencrypted APROM image
-
-        Raises:
-            AssertionError: Verification failed.
-
-        """
-        if b'Joyetech APROM' not in aprom.data:
-            raise FirmwareException(
-                "Firmware manufacturer verification failed")
-        for device_name in self.supported_device_names:
-            if device_name in aprom.data:
-                return
-        raise FirmwareException("Firmware device name verification failed")
 
     def upload_aprom(self, aprom):
         """Writes APROM to the the device. (0xC3)

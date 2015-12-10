@@ -20,6 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 __version__ = '0.1.dev0'
 
 
-from .device import VTCMini, FirmwareException
+from .device import VTCMini
 from .helpers import cal_checksum
-from .binfile import BinFile
+from .binfile import BinFile, FirmwareException

@@ -94,7 +94,7 @@ def main():
 
         if args.which == 'upload':
             try:
-                dev.verify_aprom(aprom)
+                aprom.verify(dev.supported_device_names)
             except evic.FirmwareException as error:
                 print(error)
                 sys.exit()

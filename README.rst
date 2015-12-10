@@ -5,18 +5,61 @@ Evic
 
 Evic decrypts/encrypts Joyetech Evic firmware images and uploads them using USB.
 
-
 Supported devices
---------
+---------------------
 
 * Evic VTC Mini
 
   
 Tested firmware versions
---------
+-----------------------------
 
 * Evic VTC Mini 1.10
 * Evic VTC Mini 1.20
 * Evic VTC Mini 1.30
 * Evic VTC Mini 2.00
 * Presa TC75W 1.02
+
+Installation
+-------------
+
+Install from source:
+
+::
+
+    $ git clone git://github.com/Ban3/python-evic.git
+    $ cd python-evic
+    $ python setup.py install
+
+Usage
+-------
+
+Encrypt/decrypt a firmware image:
+
+::
+
+    $ evic convert in.bin -o out.bin
+
+Dump device data flash to a file:
+
+::
+
+    $ evic dump-dataflash -o out.bin
+
+Upload an encrypted firmware image to the device:
+
+::
+
+    $ evic upload firmware.bin
+
+Upload an unencrypted firmware image to the device:
+
+::
+
+    $ evic upload -u firmware.bin
+
+Upload a firmware image using data flash from a file:
+
+::
+
+    $ evic upload -d data.bin firmware.bin

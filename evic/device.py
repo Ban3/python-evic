@@ -22,10 +22,7 @@ import struct
 import usb.core
 import usb.util
 
-from array import array
 from .helpers import cal_checksum
-
-
 
 
 class Cmd(object):
@@ -63,6 +60,26 @@ class Cmd(object):
         self.fullcmd += self.checksum
 
 
+class DataFlash(object):
+    """ Device data flash class
+
+    Attributes:
+        data: An array containing binary data of the data flash
+        device_name: A bytestring containing device name.
+        hw_version: An integer hardware version.
+        fw_version: A float firmware version.
+        checksum: An integer checksum for data flash.
+
+    """
+
+    def __init__(self, df):
+        self.data = df
+        self.device_name = df[316:316+4].tostring()
+        self.hw_version = struct.unpack("=I", df[8:8+4])[0]
+        self.fw_version = struct.unpack("=I", df[260:260+4])[0] / 100.0
+        self.checksum = struct.unpack("=I", df[0:4])[0]
+
+
 class VTCMini(object):
     """Evic VTC Mini
 
@@ -72,11 +89,6 @@ class VTCMini(object):
         supported_device_names: A list of bytestrings containing the name of
                                 the product with compatible firmware
         device: PyUSB device for the VTC Mini.
-        data_flash: An array of bytes.
-        device_name: A bytestring containing device name.
-        df_checksum: An integer checksum for data flash.
-        hw_version: An integer hardware version.
-        fw_version: A float firmware version.
 
     """
 
@@ -86,11 +98,6 @@ class VTCMini(object):
 
     def __init__(self):
         self.device = None
-        self.data_flash = None
-        self.device_name = None
-        self.df_checksum = None
-        self.hw_version = None
-        self.fw_version = None
 
     def attach(self):
         """Detaches kernel drivers from the device and claims it
@@ -120,39 +127,28 @@ class VTCMini(object):
         """
         return self.device.write(0x2, cmd, 1000)
 
-    def get_sys_data(self, dataflash_file):
+    def get_sys_data(self):
         """Sends the HID command for reading data flash (0x35)
 
-        Writes the HID command to the device and reads 2048 bytes to the
-        data_flash attribute. Sets relevant attributes from data flash.
+        Writes the HID command to the device and returns the data flash from
+        the device.
 
-        Args:
-            dataflash_file: A file object containing data flash or None
+        Returns:
+            An array containing the binary data of the data flash.
 
         Raises:
             AssertionError: Correct amount of bytes was not written to the
              device. (18 bytes)
         """
 
-        if dataflash_file:
-            self.data_flash = array('B')
-            self.data_flash.fromfile(dataflash_file, 2048)
-        else:
-            start = 0
-            end = 2048
+        start = 0
+        end = 2048
 
-            cmd = Cmd(0x35, start, end)
-            assert self.send_cmd(cmd.fullcmd) == 18,\
-                "Error: Sending read data flash command failed."
+        cmd = Cmd(0x35, start, end)
+        assert self.send_cmd(cmd.fullcmd) == 18,\
+            "Error: Sending read data flash command failed."
 
-            self.data_flash = self.read_data(end)
-
-        self.device_name = self.data_flash[316:316+4].tostring()
-        self.hw_version = struct.unpack("=I",
-                                        self.data_flash[8:8+4])[0]
-        self.fw_version = struct.unpack("=I",
-                                        self.data_flash[260:260+4])[0] / 100.0
-        self.df_checksum = struct.unpack("=I", self.data_flash[0:4])[0]
+        return self.read_data(end)
 
     def read_data(self, count):
         """Reads data from the device
@@ -170,11 +166,14 @@ class VTCMini(object):
         assert len(data) == count, 'Error: Read failed'
         return data
 
-    def set_sys_data(self):
+    def set_sys_data(self, df):
         """Sends the HID command for writing data flash (0x53)
 
         Writes the HID command to the device and writes 2048 bytes from
-        data_flash attribute to the device data flash.
+        the df argument to the device data flash.
+
+        Args:
+            df: A DataFlash object containing the data flash data
 
         Raises:
             AssertionError: Incorrect amount of bytes was written.
@@ -189,7 +188,7 @@ class VTCMini(object):
         assert self.send_cmd(cmd.fullcmd) == 18,\
             "Error: Sending write data flash command failed."
 
-        assert self.device.write(0x2, self.data_flash, 100000) == 2048,\
+        assert self.device.write(0x2, df.data, 100000) == 2048,\
             "Error: Writing data flash failed"
 
     def reset_system(self):
@@ -200,7 +199,6 @@ class VTCMini(object):
 
         assert self.send_cmd(cmd.fullcmd) == 18,\
             "Error: Sending reset command failed."
-
 
     def upload_aprom(self, aprom):
         """Writes APROM to the the device. (0xC3)

@@ -22,9 +22,11 @@ import sys
 import struct
 import argparse
 from time import sleep
+from array import array
+
+import usb.core
 
 import evic
-import usb.core
 
 DEVICE_NAMES = {b'E052': "eVic-VTC Mini", b'W007': "Presa TC75W"}
 
@@ -100,66 +102,70 @@ def main():
                 sys.exit()
 
         print("Reading data flash...\n")
-        if args.which == 'upload' and args.dataflash:
-            dev.get_sys_data(args.dataflash)
-        else:
-            dev.get_sys_data(None)
+        data_flash = evic.DataFlash(dev.get_sys_data())
+        ldrom = data_flash.fw_version == 0
 
-        if dev.device_name in DEVICE_NAMES:
-            devicename = DEVICE_NAMES[dev.device_name]
+        if args.which == 'upload' and args.dataflash:
+            df_file = array('B')
+            df_file.fromfile(args.dataflash, 2048)
+            data_flash = evic.DataFlash(df_file)
+
+        if data_flash.device_name in DEVICE_NAMES:
+            devicename = DEVICE_NAMES[data_flash.device_name]
         else:
             devicename = "Unknown device"
 
         print("\tDevice name: {0}".format(devicename))
-        print("\tFirmware version: {0:.2f}".format(dev.fw_version))
-        print("\tHardware version: {0:.2f}\n".format(dev.hw_version / 100.0))
+        print("\tFirmware version: {0:.2f}".format(data_flash.fw_version))
+        print("\tHardware version: {0:.2f}\n".format(
+            data_flash.hw_version / 100.0))
 
-        if evic.cal_checksum(dev.data_flash[4:]) == dev.df_checksum and \
-                dev.df_checksum | struct.unpack("=I",
-                                                dev.data_flash[268:268+4])[0]:
-            if dev.hw_version > 1000:
+        if evic.cal_checksum(data_flash.data[4:]) == data_flash.checksum \
+                and data_flash.checksum \
+                | struct.unpack("=I", data_flash.data[268:268+4])[0]:
+            if data_flash.hw_version > 1000:
                 print("Please set the hardware version.\n")
 
-            if struct.unpack("=I", dev.data_flash[264:264+4]) == 0 \
-                    or not dev.fw_version:
-                print("Reading data flash...\n")
-                if args.which == 'upload' and args.dataflash:
-                    dev.get_sys_data(args.dataflash)
-                else:
-                    dev.get_sys_data(None)
+            if struct.unpack("=I", data_flash.data[264:264+4]) == 0 \
+                    or not data_flash.fw_version:
+                if args.which == 'upload' and not args.dataflash:
+                    print("Reading data flash...\n")
+                    data_flash = evic.DataFlash(dev.get_sys_data())
 
             if args.which == 'dump-dataflash':
                 try:
                     print("Writing data flash to the file...\n")
-                    args.output.write(dev.data_flash)
+                    args.output.write(data_flash.data)
                 except IOError:
                     print("Error: Can't write data flash file.")
                 sys.exit()
 
-            # Bootflag
+            new_df = data_flash.data
+            # Bootflag?
             # 0 = APROM
-            # 1 = LDROM
-            dev.data_flash[13] = 1
+            # 1 = LDROm
+            new_df[13] = 1
 
             # Flashing Presa firmware requires HW version 1.03
-            if b'W007' in aprom.data and dev.device_name == b'E052' and \
-                    dev.hw_version in [106, 108, 109, 111]:
+            if b'W007' in aprom.data and data_flash.device_name == b'E052' \
+                    and data_flash.hw_version in [106, 108, 109, 111]:
                 print("Changing HW version to 1.03...\n")
                 new_hw_version = bytearray(struct.pack("=I", 103))
                 for i in range(4):
-                    dev.data_flash[8+i] = new_hw_version[i]
+                    new_df[8+i] = new_hw_version[i]
 
             # Calculate new checksum
             checksum = bytearray(struct.pack("=I",
-                                             evic.cal_checksum(
-                                                 dev.data_flash[4:])))
+                                             evic.cal_checksum(new_df[4:])))
             for i in range(4):
-                dev.data_flash[i] = checksum[i]
+                new_df[i] = checksum[i]
+
+            data_flash = evic.DataFlash(new_df)
 
             print("Writing data flash...\n")
             sleep(2)
-            dev.set_sys_data()
-            if dev.fw_version > 0:
+            dev.set_sys_data(data_flash)
+            if not ldrom:
                 print("Restarting the device...\n")
                 try:
                     dev.reset_system()

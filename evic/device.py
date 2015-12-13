@@ -108,10 +108,13 @@ class VTCMini(object):
         """
         self.device = usb.core.find(idVendor=self.vid, idProduct=self.pid)
         assert self.device, "Device not found"
-        if self.device.is_kernel_driver_active(0):
-            self.device.detach_kernel_driver(0)
-            self.device.set_configuration()
-            usb.util.claim_interface(self.device, 0)
+        try:
+            if self.device.is_kernel_driver_active(0):
+                self.device.detach_kernel_driver(0)
+                self.device.set_configuration()
+                usb.util.claim_interface(self.device, 0)
+        except NotImplementedError:
+            pass
 
     def send_cmd(self, cmd):
         """Sends a HID command

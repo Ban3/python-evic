@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Evic decrypts/encrypts Joyetech Evic firmware images and uploads them using USB.
+Evic is a USB programmer for devices based on the Joyetech Evic VTC Mini.
 Copyright © Jussi Timperi
 
 This program is free software: you can redistribute it and/or modify
@@ -18,39 +18,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 
-class FirmwareException(Exception):
-    """Exception for firmware verification"""
+class FirmwareError(Exception):
+    """Firmware verification error."""
 
     pass
 
 
 class BinFile(object):
-    """Firmware binary file
+    """Firmware binary file class
 
     Attributes:
-        data: binary data of the firmware image
-
+        data: A bytearray containing binary data of the firmware.
     """
+
     def __init__(self, data):
         self.data = bytearray(data)
 
     @staticmethod
     def _genfun(filesize, index):
-        """Generator function for decrypting/encrypting the binary file
+        """Generator function for decrypting/encrypting the binary file.
 
         Args:
-            filesize: An integer, filesize of the binary file
-            index: An integer, index of the byte that is being decrypted
-
+            filesize: An integer, filesize of the binary file.
+            index: An integer, index of the byte that is being decrypted.
         """
+
         return filesize + 408376 + index - filesize // 408376
 
     def convert(self):
-        """ Decrypts/Encrypts the binary data.
+        """Decrypts/Encrypts the binary data.
 
         Returns:
-            A Bytearray containing decrypted/encrypted APROM image
+            A Bytearray containing decrypted/encrypted APROM image.
         """
+
         data = bytearray(len(self.data))
         for i in range(0, len(self.data)):
             data[i] = (self.data[i] ^
@@ -58,19 +59,19 @@ class BinFile(object):
         return data
 
     def verify(self, product_names):
-        """Verifies that the unencrypted APROM is correct
+        """Verifies the data unencrypted firmware.
 
         Args:
-            product_names: A list of supported product names for the device
+            product_names: A list of supported product names for the device.
 
         Raises:
             FirmwareException: Verification failed.
 
         """
         if b'Joyetech APROM' not in self.data:
-            raise FirmwareException(
-                "Firmware manufacturer verification failed")
-        for name in product_names:
-            if name in self.data:
-                return
-        raise FirmwareException("Firmware device name verification failed")
+            raise FirmwareError(
+                "Firmware manufacturer verification failed.")
+        if not any(product_name in self.data for product_name in
+                   product_names):
+            raise FirmwareError("Firmware device name verification failed.")
+

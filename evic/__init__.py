@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Evic decrypts/encrypts Joyetech Evic firmware images and uploads them using USB.
+Evic is a USB programmer for devices based on the Joyetech Evic VTC Mini.
 Copyright © Jussi Timperi
 
 This program is free software: you can redistribute it and/or modify
@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 __version__ = '0.1.dev0'
 
 
-from .device import VTCMini, DataFlash
+from .device import DEVICE_NAMES, VTCMini
 from .helpers import cal_checksum
-from .binfile import BinFile, FirmwareException
+from .binfile import BinFile, FirmwareError
+from .dataflash import DataFlash, DataFlashError

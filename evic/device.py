@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Evic decrypts/encrypts Joyetech Evic firmware images and uploads them using USB.
+Evic is a USB programmer for devices based on the Joyetech Evic VTC Mini.
 Copyright © Jussi Timperi
 
 This program is free software: you can redistribute it and/or modify
@@ -19,14 +19,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import struct
 
-import usb.core
-import usb.util
+import hid
 
+from .dataflash import DataFlash
 from .helpers import cal_checksum
 
+DEVICE_NAMES = {b'E052': "eVic-VTC Mini", b'W007': "Presa TC75W"}
 
-class Cmd(object):
-    """Nuvoton HID command class
+
+class HIDCmd(object):
+    """Nuvoton HID command class.
 
     Available HID command codes:
         0x35: Read data flash.
@@ -35,49 +37,37 @@ class Cmd(object):
         0xC3: Write APROM.
 
     Attributes:
-        cmd: A bytearray object for HID command code (1 byte)
-        length: A bytearray object for HID command length (1 byte)
-        arg1: A bytearray object for the first HID command argument (4 bytes)
-        arg2: A bytearray object for the second HID command argument (4 bytes)
-        signature: A bytearray object for HID command signature (4 bytes)
-        checksum: A bytearray object for the checksum of the HID command
-                  (4 bytes)
-        fullcmd: A bytearray object for the full command (18 bytes)
+        cmdcode: A list containing  HID command code (1 byte).
+        length: A list containing HID command length,
+                not including the checksum  (1 byte).
+        arg1: A list containing the first HID command argument (4 bytes).
+        arg2: A list containing the second HID command argument (4 bytes).
+        signature: A list containing the HID command signature (4 bytes).
+        checksum: A list containing the checksum of the HID command.
+                  (4 bytes).
+        cmd: A list containing the full command (18 bytes).
     """
 
-    signature = bytearray(struct.pack('=I', 0x43444948))
+    signature = [byte for byte in bytearray(struct.pack('=I', 0x43444948))]
     # Do not count the last 4 bytes (checksum)
-    length = bytearray(struct.pack('=B', 14))
+    length = [14]
 
-    def __init__(self, cmd, arg1, arg2):
-        self.cmd = bytearray(struct.pack('=B', cmd))
-        self.arg1 = bytearray(struct.pack('=I', arg1))
-        self.arg2 = bytearray(struct.pack('=I', arg2))
-        self.fullcmd = self.cmd + self.length + self.arg1 + self.arg2 +\
+    def __init__(self, cmdcode, arg1, arg2):
+        self.cmdcode = [byte for byte in bytearray(struct.pack('=B', cmdcode))]
+        self.arg1 = [byte for byte in bytearray(struct.pack('=I', arg1))]
+        self.arg2 = [byte for byte in bytearray(struct.pack('=I', arg2))]
+
+    @property
+    def cmd(self):
+        """HID Command
+
+        Returns:
+            A list containing the full HID command
+        """
+
+        cmd = self.cmdcode + self.length + self.arg1 + self.arg2 + \
             self.signature
-        self.checksum = bytearray(struct.pack('=I',
-                                              cal_checksum(self.fullcmd)))
-        self.fullcmd += self.checksum
-
-
-class DataFlash(object):
-    """ Device data flash class
-
-    Attributes:
-        data: An array containing binary data of the data flash
-        device_name: A bytestring containing device name.
-        hw_version: An integer hardware version.
-        fw_version: A float firmware version.
-        checksum: An integer checksum for data flash.
-
-    """
-
-    def __init__(self, df):
-        self.data = df
-        self.device_name = df[316:316+4].tostring()
-        self.hw_version = struct.unpack("=I", df[8:8+4])[0]
-        self.fw_version = struct.unpack("=I", df[260:260+4])[0] / 100.0
-        self.checksum = struct.unpack("=I", df[0:4])[0]
+        return cmd + [byte for byte in cal_checksum(cmd)]
 
 
 class VTCMini(object):
@@ -88,8 +78,12 @@ class VTCMini(object):
         pid = USB product ID as an integer.
         supported_device_names: A list of bytestrings containing the name of
                                 the product with compatible firmware
-        device: PyUSB device for the VTC Mini.
-
+        device: A HIDAPI device for the VTC Mini.
+        manufacturer: A string containing the device manufacturer.
+        product: A string containing the product name.
+        serial: A string conraining the product serial number.
+        data_flash: An instance of DataFlash containing the device data flash.
+        ldrom: A Boolean value set to True if the device is booted to LDROM.
     """
 
     vid = 0x0416
@@ -97,128 +91,124 @@ class VTCMini(object):
     supported_device_names = [b'E052', b'W007']
 
     def __init__(self):
-        self.device = None
+        self.device = hid.device()
+        self.manufacturer = None
+        self.product = None
+        self.serial = None
+        self.data_flash = None
+        self.ldrom = False
 
     def attach(self):
-        """Detaches kernel drivers from the device and claims it
+        """Opens the USB device.
 
-        Raises:
-            AssertionError: If device could not be opened.
-
+        Opens the device and retrieves the device attributes.
         """
-        self.device = usb.core.find(idVendor=self.vid, idProduct=self.pid)
-        assert self.device, "Device not found"
-        try:
-            if self.device.is_kernel_driver_active(0):
-                self.device.detach_kernel_driver(0)
-                self.device.set_configuration()
-                usb.util.claim_interface(self.device, 0)
-        except NotImplementedError:
-            pass
 
-    def send_cmd(self, cmd):
-        """Sends a HID command
-
-        Writes a HID command to the device.
-
-        Args:
-            cmd: A bytearray object for the HID command in the form of
-             Cmd.fullcommand
-
-        Returns:
-            An integer count of bytes written to the device
-        """
-        return self.device.write(0x2, cmd, 1000)
+        self.device.open(self.vid, self.pid)
+        self.manufacturer = self.device.get_manufacturer_string()
+        self.product = self.device.get_product_string()
+        self.serial = self.device.get_serial_number_string()
 
     def get_sys_data(self):
-        """Sends the HID command for reading data flash (0x35)
+        """Reads the device data flash
 
-        Writes the HID command to the device and returns the data flash from
-        the device.
-
-        Returns:
-            An array containing the binary data of the data flash.
-
-        Raises:
-            AssertionError: Correct amount of bytes was not written to the
-             device. (18 bytes)
+        Writes the HID command for reading the data flash
+        and retrieves the data flash to the data_flash attribute as an instance
+        of DataFlash.
+        Sets the ldrom attribute to True if the device is booted to LDROM.
         """
 
         start = 0
         end = 2048
 
-        cmd = Cmd(0x35, start, end)
-        assert self.send_cmd(cmd.fullcmd) == 18,\
-            "Error: Sending read data flash command failed."
+        read_df = HIDCmd(0x35, start, end)
+        self.write(read_df.cmd)
 
-        return self.read_data(end)
+        self.data_flash = DataFlash(self.read(end))
 
-    def read_data(self, count):
-        """Reads data from the device
+        self.ldrom = self.data_flash.fw_version == 0
+
+    def write(self, data):
+        """Writes data to the device.
 
         Args:
-            count: An integer, count of bytes to read.
-
-        Returns:
-            An array object of the data read.
+            data: A list containing binary data.
 
         Raises:
-            AssertionError: Incorrect amount of bytes was read.
+            IOError: Incorrect amount of bytes was written.
         """
-        data = self.device.read(0x81, count)
-        assert len(data) == count, 'Error: Read failed'
+
+        bytes_written = 0
+        chunks = [data[i:i+64] for i in range(0, len(data), 64)]
+        for chunk in chunks:
+            buf = [0] + chunk
+            bytes_written += self.device.write(buf) - 1
+
+        if bytes_written != len(data):
+            raise IOError("HID Write failed.")
+
+    def read(self, length):
+        """Reads data from the device.
+
+        Args:
+            length: Amount of bytes bytes to read.
+
+        Returns:
+            A list containing binary data.
+
+        Raises:
+            IOError: Incorrect amount of bytes was read.
+        """
+
+        data = []
+        pages, rem = divmod(length, 64)
+        for _ in range(0, pages):
+            data += self.device.read(64)
+        if rem:
+            data += self.device.read(rem)
+
+        if len(data) != length:
+            raise IOError("HID read failed")
+
         return data
 
-    def set_sys_data(self, df):
-        """Sends the HID command for writing data flash (0x53)
+    def set_sys_data(self, data_flash):
+        """Writes the device data flash.
 
-        Writes the HID command to the device and writes 2048 bytes from
-        the df argument to the device data flash.
+        Writes the HID command for writing the data flash
+        and writes the first 2048 bytes from the data_flash argument
+        to the device data flash.
 
         Args:
-            df: A DataFlash object containing the data flash data
-
-        Raises:
-            AssertionError: Incorrect amount of bytes was written.
-
+            data_flash: A DataFlash object.
         """
 
         start = 0
         end = 2048
 
-        cmd = Cmd(0x53, start, end)
+        write_df = HIDCmd(0x53, start, end)
+        self.write(write_df.cmd)
 
-        assert self.send_cmd(cmd.fullcmd) == 18,\
-            "Error: Sending write data flash command failed."
-
-        assert self.device.write(0x2, df.data, 100000) == 2048,\
-            "Error: Writing data flash failed"
+        self.write(list(data_flash.data))
 
     def reset_system(self):
-        """Sends the HID command for reseting the system (0xB4)
+        """Sends the HID command for resetting the system (0xB4)
 
         """
-        cmd = Cmd(0xB4, 0, 0)
-
-        assert self.send_cmd(cmd.fullcmd) == 18,\
-            "Error: Sending reset command failed."
+        reset = HIDCmd(0xB4, 0, 0)
+        self.write(reset.cmd)
 
     def upload_aprom(self, aprom):
-        """Writes APROM to the the device. (0xC3)
+        """Writes APROM to the the device.
 
         Args:
-            aprom: A BinFile object containing unencrypted APROM image
-
-        Raises:
-            AssertionError: Incorrect amount of bytes was written.
-
+            aprom: A BinFile object containing unencrypted APROM image.
         """
+
         start = 0
         end = len(aprom.data)
 
-        cmd = Cmd(0xC3, start, end)
-        assert self.send_cmd(cmd.fullcmd) == 18,\
-            "Error: Sending write APROM command failed."
+        write_aprom = HIDCmd(0xC3, start, end)
+        self.write(write_aprom.cmd)
 
-        assert self.device.write(0x2, aprom.data, 1000000) == len(aprom.data),\
-            "Error: APROM write failed"
+        self.write(list(aprom.data))

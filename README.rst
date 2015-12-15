@@ -2,8 +2,7 @@
 Evic
 ===============================
 
-
-Evic decrypts/encrypts Joyetech Evic firmware images and uploads them using USB.
+Evic is a USB programmer for devices based on the Joyetech Evic VTC Mini.
 
 Supported devices
 ---------------------
@@ -18,7 +17,10 @@ Tested firmware versions
 * Evic VTC Mini 1.20
 * Evic VTC Mini 1.30
 * Evic VTC Mini 2.00
-* Presa TC75W 1.02
+* Presa TC75W 1.02\*
+
+\*Flashing Presa firmware to a VTC Mini requires changing the hardware version
+on some devices. Backup your data flash before flashing!
 
 Installation
 -------------

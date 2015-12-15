@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Evic decrypts/encrypts Joyetech Evic firmware images and uploads them using USB.
+Evic is a USB programmer for devices based on the Joyetech Evic VTC Mini.
 Copyright © Jussi Timperi
 
 This program is free software: you can redistribute it and/or modify
@@ -17,12 +17,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import struct
+
 
 def cal_checksum(data):
-    """Calculates a checksum for the data
+    """Calculates a checksum for the data.
 
     Args:
-        data: An iterable.
+        data: An iterable that can be summed.
 
+    Returns:
+        A bytearray containing 4 byte integer.
     """
-    return sum(data)
+
+    return bytearray(struct.pack("=I", sum(data)))

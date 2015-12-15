@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Evic decrypts/encrypts Joyetech Evic firmware images and uploads them using USB.
+Evic is a USB programmer for devices based on the Joyetech Evic VTC Mini.
 Copyright © Jussi Timperi
 
 This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,8 @@ with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 requirements = [
-    'pyusb'
+    'hidapi>=0.7.99.post8',
+    'click'
 ]
 
 setup(
@@ -35,9 +36,9 @@ setup(
     version="0.1",
     author="Jussi Timperi",
     author_email="jussi.timperi@iki.fi",
-    description=("A tool to decrypt/encrypt and USB upload Evic firmware."),
+    description=("Evic is a USB programmer for devices based on the Joyetech Evic VTC Mini."),
     license="GPL",
-    keywords="ecig electronic cigarette evic joyetech",
+    keywords="ecig electronic cigarette evic joyetech presa",
     url="https://github.com/Ban3/python-evic",
     packages=['evic'],
     install_requires=requirements,
@@ -50,8 +51,10 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
     ],
     entry_points={
-        'console_scripts': ['evic=evic.cli:main'],
+        'console_scripts': [
+            'evic=evic.cli:main'],
     },
 )

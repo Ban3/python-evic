@@ -129,12 +129,12 @@ def verify_dataflash(data_flash):
 
 @main.command()
 @click.argument('input', type=click.File('rb'))
-@click.option('--unencrypted/--encrypted', '-u/-e', default=False,
-              help='Use unencrypted/encrypted image. Defaults to encrypted.')
+@click.option('--encrypted/--unencrypted', '-e/-u', default=True,
+              help='Use encrypted/unencrypted image. Defaults to encrypted.')
 @click.option('--dataflash', '-d', type=click.File('rb'),
               help='Use data flash from a file.')
 @pass_context
-def upload(ctx, input, unencrypted, dataflash):
+def upload(ctx, input, encrypted, dataflash):
     """Upload an APROM image to the device."""
 
     find_dev(ctx.dev)
@@ -142,7 +142,7 @@ def upload(ctx, input, unencrypted, dataflash):
     verify_dataflash(ctx.dev.data_flash)
 
     binfile = evic.BinFile(input.read())
-    if unencrypted:
+    if not encrypted:
         aprom = binfile
     else:
         aprom = evic.BinFile(binfile.convert())

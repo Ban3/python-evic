@@ -144,6 +144,10 @@ class VTCMini(object):
             buf = [0] + chunk
             bytes_written += self.device.write(buf) - 1
 
+        # Windows always writes full pages
+        if bytes_written > len(data):
+            bytes_written -= 64 - (len(data) % 64)
+
         if bytes_written != len(data):
             raise IOError("HID Write failed.")
 
@@ -166,6 +170,10 @@ class VTCMini(object):
             data += self.device.read(64)
         if rem:
             data += self.device.read(rem)
+
+        # Windows always reads full pages
+        if len(data) > length:
+            data = data[:length]
 
         if len(data) != length:
             raise IOError("HID read failed")

@@ -178,9 +178,14 @@ def upload(ctx, input, unencrypted, dataflash):
         ctx.dev.attach()
         click.secho("OK", fg='green', bold=True)
 
-    click.echo("Writing APROM...", nl=False)
-    ctx.dev.upload_aprom(aprom)
-    click.secho("OK", fg='green', bold=True)
+    try:
+        click.echo("Writing APROM...", nl=False)
+        ctx.dev.upload_aprom(aprom)
+        click.secho("OK", fg='green', bold=True)
+    except IOError as error:
+        click.secho("FAIL", fg='red', bold=True)
+        click.echo(error)
+        sys.exit(1)
 
 
 @main.command('dump-dataflash')

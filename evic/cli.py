@@ -209,5 +209,5 @@ def convert(input, output):
     outfile = evic.BinFile(infile.convert())
 
     with handle_exceptions(IOError):
-        click.echo("Writing APROM image...")
+        click.echo("Writing APROM image...", nl=False)
         output.write(outfile.data)

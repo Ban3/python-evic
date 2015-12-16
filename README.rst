@@ -33,6 +33,11 @@ Install from source:
     $ cd python-evic
     $ python setup.py install
 
+Allowing non-root access to the device
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The file ``udev/99-nuvoton-hid.rules`` contains an example set of rules for setting the device permissions to ``0666``.  Copy the file to the directory ``/etc/udev/rules.d/`` to use it.
+
 Usage
 -------
 

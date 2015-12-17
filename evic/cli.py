@@ -133,13 +133,17 @@ def verify_dataflash(data_flash):
               help='Use encrypted/unencrypted image. Defaults to encrypted.')
 @click.option('--dataflash', '-d', type=click.File('rb'),
               help='Use data flash from a file.')
+@click.option('--no-verify', 'noverify',
+              type=click.Choice(['aprom', 'dataflash']), multiple=True,
+              help='Disable verification for APROM or data flash.')
 @pass_context
-def upload(ctx, input, encrypted, dataflash):
+def upload(ctx, input, encrypted, dataflash, noverify):
     """Upload an APROM image to the device."""
 
     find_dev(ctx.dev)
     read_data_flash(ctx.dev)
-    verify_dataflash(ctx.dev.data_flash)
+    if 'dataflash' not in noverify:
+        verify_dataflash(ctx.dev.data_flash)
 
     binfile = evic.BinFile(input.read())
     if not encrypted:
@@ -147,13 +151,15 @@ def upload(ctx, input, encrypted, dataflash):
     else:
         aprom = evic.BinFile(binfile.convert())
 
-    with handle_exceptions(evic.FirmwareError):
-        click.echo("Verifying APROM...", nl=False)
-        aprom.verify(ctx.dev.supported_device_names)
+    if 'aprom' not in noverify:
+        with handle_exceptions(evic.FirmwareError):
+            click.echo("Verifying APROM...", nl=False)
+            aprom.verify(ctx.dev.supported_device_names)
 
     if dataflash:
         data_flash_file = evic.DataFlash(dataflash.read())
-        verify_dataflash(data_flash_file)
+        if 'dataflash' not in noverify:
+            verify_dataflash(data_flash_file)
         data_flash = data_flash_file
     else:
         data_flash = ctx.dev.data_flash
@@ -186,13 +192,16 @@ def upload(ctx, input, encrypted, dataflash):
 
 @main.command('dump-dataflash')
 @click.option('--output', '-o', type=click.File('wb'))
+@click.option('--no-verify', 'noverify', is_flag=True,
+              help='Disable verification.')
 @pass_context
-def dumpdataflash(ctx, output):
+def dumpdataflash(ctx, output, noverify):
     """Write device data flash to a file."""
 
     find_dev(ctx.dev)
     read_data_flash(ctx.dev)
-    verify_dataflash(ctx.dev.data_flash)
+    if not noverify:
+        verify_dataflash(ctx.dev.data_flash)
 
     with handle_exceptions(IOError):
         click.echo("Writing data flash to the file...", nl=False)

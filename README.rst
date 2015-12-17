@@ -9,7 +9,6 @@ Supported devices
 
 * Evic VTC Mini
 
-  
 Tested firmware versions
 -----------------------------
 
@@ -40,7 +39,10 @@ The file ``udev/99-nuvoton-hid.rules`` contains an example set of rules for sett
 
 Usage
 -------
+See  ``--help`` for more information on a given command.
 
+|
+  
 Encrypt/decrypt a firmware image:
 
 ::
@@ -70,3 +72,10 @@ Upload a firmware image using data flash from a file:
 ::
 
     $ evic upload -d data.bin firmware.bin
+
+Use  ``--no-verify`` to disable verification for APROM or data flash. To disable both:
+
+::  
+
+    $ evic upload --no-verify aprom --no-verify dataflash firmware.bin
+

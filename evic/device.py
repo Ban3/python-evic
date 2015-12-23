@@ -27,57 +27,15 @@ from .helpers import cal_checksum
 DEVICE_NAMES = {b'E052': "eVic-VTC Mini", b'W007': "Presa TC75W"}
 
 
-class HIDCmd(object):
-    """Nuvoton HID command class.
-
-    Available HID command codes:
-        0x35: Read data flash.
-        0x53: Write data flash.
-        0xB4: Reset device.
-        0xC3: Write APROM.
-
-    Attributes:
-        cmdcode: A list containing  HID command code (1 byte).
-        length: A list containing HID command length,
-                not including the checksum  (1 byte).
-        arg1: A list containing the first HID command argument (4 bytes).
-        arg2: A list containing the second HID command argument (4 bytes).
-        signature: A list containing the HID command signature (4 bytes).
-        checksum: A list containing the checksum of the HID command.
-                  (4 bytes).
-        cmd: A list containing the full command (18 bytes).
-    """
-
-    signature = [byte for byte in bytearray(struct.pack('=I', 0x43444948))]
-    # Do not count the last 4 bytes (checksum)
-    length = [14]
-
-    def __init__(self, cmdcode, arg1, arg2):
-        self.cmdcode = [byte for byte in bytearray(struct.pack('=B', cmdcode))]
-        self.arg1 = [byte for byte in bytearray(struct.pack('=I', arg1))]
-        self.arg2 = [byte for byte in bytearray(struct.pack('=I', arg2))]
-
-    @property
-    def cmd(self):
-        """HID Command
-
-        Returns:
-            A list containing the full HID command
-        """
-
-        cmd = self.cmdcode + self.length + self.arg1 + self.arg2 + \
-            self.signature
-        return cmd + [byte for byte in cal_checksum(cmd)]
-
-
 class VTCMini(object):
     """Evic VTC Mini
 
     Attributes:
-        vid = USB vendor ID as an integer.
-        pid = USB product ID as an integer.
+        vid: USB vendor ID as an integer.
+        pid: USB product ID as an integer.
         supported_device_names: A list of bytestrings containing the name of
                                 the product with compatible firmware
+        hid_signature: A list containing the HID command signature (4 bytes).
         device: A HIDAPI device for the VTC Mini.
         manufacturer: A string containing the device manufacturer.
         product: A string containing the product name.
@@ -89,6 +47,8 @@ class VTCMini(object):
     vid = 0x0416
     pid = 0x5020
     supported_device_names = [b'E052', b'W007']
+    # 0x43444948
+    hid_signature = [0x48, 0x49, 0x44, 0x43]
 
     def __init__(self):
         self.device = hid.device()
@@ -97,6 +57,28 @@ class VTCMini(object):
         self.serial = None
         self.data_flash = None
         self.ldrom = False
+
+    @classmethod
+    def hidcmd(cls, cmdcode, arg1, arg2):
+        """Generates a Nuvoton HID command.
+
+        Args:
+            cmdcode: The hid command as a single byte.
+            arg1:    First HID command argument.
+            arg2:    Second HID command argument.
+
+        Returns:
+            A list containing the full HID command.
+        """
+
+        # Do not count the last 4 bytes (checksum)
+        length = [14]
+
+        cmdcode = [byte for byte in bytearray(struct.pack('=B', cmdcode))]
+        arg1 = [byte for byte in bytearray(struct.pack('=I', arg1))]
+        arg2 = [byte for byte in bytearray(struct.pack('=I', arg2))]
+        cmd = cmdcode + length + arg1 + arg2 + cls.hid_signature
+        return cmd + [byte for byte in cal_checksum(cmd)]
 
     def attach(self):
         """Opens the USB device.
@@ -121,8 +103,8 @@ class VTCMini(object):
         start = 0
         end = 2048
 
-        read_df = HIDCmd(0x35, start, end)
-        self.write(read_df.cmd)
+        read_df = self.hidcmd(0x35, start, end)
+        self.write(read_df)
 
         self.data_flash = DataFlash(self.read(end))
 
@@ -194,8 +176,8 @@ class VTCMini(object):
         start = 0
         end = 2048
 
-        write_df = HIDCmd(0x53, start, end)
-        self.write(write_df.cmd)
+        write_df = self.hidcmd(0x53, start, end)
+        self.write(write_df)
 
         self.write(list(data_flash.data))
 
@@ -203,8 +185,8 @@ class VTCMini(object):
         """Sends the HID command for resetting the system (0xB4)
 
         """
-        reset = HIDCmd(0xB4, 0, 0)
-        self.write(reset.cmd)
+        reset = self.hidcmd(0xB4, 0, 0)
+        self.write(reset)
 
     def upload_aprom(self, aprom):
         """Writes APROM to the the device.
@@ -216,7 +198,7 @@ class VTCMini(object):
         start = 0
         end = len(aprom.data)
 
-        write_aprom = HIDCmd(0xC3, start, end)
-        self.write(write_aprom.cmd)
+        write_aprom = self.hidcmd(0xC3, start, end)
+        self.write(write_aprom)
 
         self.write(list(aprom.data))

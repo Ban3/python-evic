@@ -154,7 +154,8 @@ def upload(ctx, input, encrypted, dataflash, noverify):
     if 'aprom' not in noverify:
         with handle_exceptions(evic.FirmwareError):
             click.echo("Verifying APROM...", nl=False)
-            aprom.verify(ctx.dev.supported_device_names)
+            aprom.verify(ctx.dev.supported_device_names,
+                         ctx.dev.data_flash.hw_version)
 
     if dataflash:
         data_flash_file = evic.DataFlash(dataflash.read())

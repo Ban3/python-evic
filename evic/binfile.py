@@ -58,11 +58,12 @@ class BinFile(object):
                        self._genfun(len(self.data), i)) & 0xFF
         return data
 
-    def verify(self, product_names):
+    def verify(self, product_names, hw_version):
         """Verifies the data unencrypted firmware.
 
         Args:
             product_names: A list of supported product names for the device.
+            hw_version: An integer device hardware version.
 
         Raises:
             FirmwareException: Verification failed.
@@ -71,7 +72,22 @@ class BinFile(object):
         if b'Joyetech APROM' not in self.data:
             raise FirmwareError(
                 "Firmware manufacturer verification failed.")
-        if not any(product_name in self.data for product_name in
-                   product_names):
-            raise FirmwareError("Firmware device name verification failed.")
 
+        id_ind = 0
+        max_hw_version = 0
+        for product_name in product_names:
+            try:
+                id_ind = self.data.index(product_name)
+                max_hw_ind = id_ind + len(product_name)
+                max_hw_version = (self.data[max_hw_ind] * 100) + \
+                    (self.data[max_hw_ind + 1] * 10) + \
+                    (self.data[max_hw_ind + 2])
+                break
+            except ValueError:
+                continue
+        if id_ind:
+            if max_hw_version < hw_version:
+                raise FirmwareError(
+                    "Firmware hardware version verification failed.")
+        else:
+            raise FirmwareError("Firmware device name verification failed.")

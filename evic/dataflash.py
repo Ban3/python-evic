@@ -37,9 +37,9 @@ class DataFlash(object):
         hw_version: An integer hardware version.
         fw_version: An integer firmware version.
         bootflag: 0 or 1. Controls whether APROM or LDROM is booted
-                when the device is restarted. TODO: Confirm this.
-                0 = LDROM
-                1 = APROM
+                when the device is restarted.
+                0 = APROM
+                1 = LDROM
         checksum: A bytearray containing checksum for the data flash.
     """
 

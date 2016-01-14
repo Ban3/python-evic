@@ -28,7 +28,7 @@ Installation
 Install from source:
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Building hidapi requires libusb headers and cython. On Arch Linux they can be optained from the repositories by installing packages ``libusb`` and ``cython``. Debian based distributions will have packages ``libusb-1.0-0-dev`` and ``cython``.
+Building hidapi requires libusb headers and cython. On Arch Linux they can be obtained from the repositories by installing packages ``libusb`` and ``cython``. Debian based distributions will have packages ``libusb-1.0-0-dev`` and ``cython``.
 
 |
 

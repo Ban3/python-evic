@@ -30,6 +30,9 @@ Install from source:
 
 Building hidapi requires libusb headers and cython. On Arch Linux they can be obtained from the repositories by installing packages ``libusb`` and ``cython``. Debian based distributions will have packages ``libusb-1.0-0-dev`` and ``cython``.
 
+On Windows you will also need the correct compiler for your Python version. See `this <https://wiki.python.org/moin/WindowsCompilers>`_
+page for more information on setting up the compiler.
+
 |
 
 Building python-evic:

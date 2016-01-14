@@ -27,7 +27,7 @@ with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 requirements = [
-    'hidapi>=0.7.99',
+    'hidapi==0.7.99.post9',
     'click'
 ]
 

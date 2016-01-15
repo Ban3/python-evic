@@ -21,6 +21,7 @@ Tested firmware versions
 
 * Evic VTC Mini <=3.0
 * Presa TC75W 1.02\*
+* Examples from `evic-sdk <https://github.com/ReservedField/evic-sdk>`_
 
 \*Flashing Presa firmware to a VTC Mini requires changing the hardware version
 on some devices. Backup your data flash before flashing!

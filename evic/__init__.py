@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 __version__ = '0.1.dev0'
 
 
-from .device import DEVICE_NAMES, VTCMini
+from .device import HIDTransfer
 from .helpers import cal_checksum
 from .binfile import BinFile, FirmwareError
 from .dataflash import DataFlash, DataFlashError

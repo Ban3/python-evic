@@ -8,6 +8,13 @@ Supported devices
 ---------------------
 
 * Evic VTC Mini
+* Presa TC75W*
+* Vaporflask Classic*
+* Vaporflask Lite*
+* Vaporflask Stout*
+* Reuleaux RX200*
+
+\*Untested
 
 Tested firmware versions
 -----------------------------

@@ -32,12 +32,11 @@ class Context(object):
     """Click context.
 
     Attributes:
-        device_names: A dictionary mapping of device names.
-        dev: An instance of evic.VTCMini.
+        dev: An instance of evic.HIDTransfer.
     """
 
     def __init__(self):
-        self.dev = evic.VTCMini()
+        self.dev = evic.HIDTransfer()
 
 pass_context = click.make_pass_decorator(Context, ensure=True)
 
@@ -98,8 +97,8 @@ def read_data_flash(dev):
                 or not dev.data_flash.fw_version:
             dev.get_sys_data()
 
-    if dev.data_flash.device_name in evic.DEVICE_NAMES:
-        devicename = evic.DEVICE_NAMES[dev.data_flash.device_name]
+    if dev.data_flash.device_name in dev.device_names:
+        devicename = dev.device_names[dev.data_flash.device_name]
     else:
         devicename = "Unknown device"
 
@@ -154,8 +153,9 @@ def upload(ctx, input, encrypted, dataflash, noverify):
     if 'aprom' not in noverify:
         with handle_exceptions(evic.FirmwareError):
             click.echo("Verifying APROM...", nl=False)
-            aprom.verify(ctx.dev.supported_device_names,
-                         ctx.dev.data_flash.hw_version)
+            aprom.verify(
+                ctx.dev.supported_device_names[ctx.dev.data_flash.device_name],
+                ctx.dev.data_flash.hw_version)
 
     if dataflash:
         data_flash_file = evic.DataFlash(dataflash.read())

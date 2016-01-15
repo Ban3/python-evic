@@ -24,17 +24,17 @@ import hid
 from .dataflash import DataFlash
 from .helpers import cal_checksum
 
-DEVICE_NAMES = {b'E052': "eVic-VTC Mini", b'W007': "Presa TC75W"}
 
-
-class VTCMini(object):
-    """Evic VTC Mini
+class HIDTransfer(object):
+    """Generic Nuvoton HID Transfer device
 
     Attributes:
         vid: USB vendor ID as an integer.
         pid: USB product ID as an integer.
-        supported_device_names: A list of bytestrings containing the name of
-                                the product with compatible firmware
+        device_names: A dictionary mapping product IDs to device name bytestrings.
+        supported_device_names: A dictionary mapping device name to a list of
+                                bytestrings containing the names of
+                                the products with compatible firmware
         hid_signature: A list containing the HID command signature (4 bytes).
         device: A HIDAPI device for the VTC Mini.
         manufacturer: A string containing the device manufacturer.
@@ -46,7 +46,18 @@ class VTCMini(object):
 
     vid = 0x0416
     pid = 0x5020
-    supported_device_names = [b'E052', b'W007']
+    device_names = {b'E052': "eVic-VTC Mini",
+                    b'W007': "Presa TC75W",
+                    b'W010': "Classic",
+                    b'W011': "Lite",
+                    b'W013': "Stout",
+                    b'W014': "Reuleaux RX200"}
+    supported_device_names = {b'E052': [b'E052', b'W007'],
+                              b'W007': [b'W007'],
+                              b'W010': [b'W010'],
+                              b'W011': [b'W011'],
+                              b'W013': [b'W013'],
+                              b'W014': [b'W014']}
     # 0x43444948
     hid_signature = [0x48, 0x49, 0x44, 0x43]
 

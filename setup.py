@@ -18,10 +18,7 @@ You should have received a copy of the GNU General Public License
 along
 """
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()

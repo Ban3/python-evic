@@ -37,8 +37,6 @@ Building hidapi requires libusb headers and cython. On Arch Linux they can be ob
 On Windows you will also need the correct compiler for your Python version. See `this <https://wiki.python.org/moin/WindowsCompilers>`_
 page for more information on setting up the compiler.
 
-Building python-evic requires that you have setuptools installed.
-
 |
 
 Building python-evic:

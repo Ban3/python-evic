@@ -17,6 +17,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along
 """
+import ez_setup
+ez_setup.use_setuptools()
 
 from setuptools import setup
 

@@ -47,12 +47,14 @@ class HIDTransfer(object):
     vid = 0x0416
     pid = 0x5020
     device_names = {b'E052': "eVic-VTC Mini",
+                    b'E060': "Cuboid",
                     b'W007': "Presa TC75W",
                     b'W010': "Classic",
                     b'W011': "Lite",
                     b'W013': "Stout",
                     b'W014': "Reuleaux RX200"}
     supported_device_names = {b'E052': [b'E052', b'W007'],
+                              b'E060': [b'E060'],
                               b'W007': [b'W007'],
                               b'W010': [b'W010'],
                               b'W011': [b'W011'],

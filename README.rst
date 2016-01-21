@@ -8,6 +8,7 @@ Supported devices
 ---------------------
 
 * Evic VTC Mini
+* Cuboid*
 * Presa TC75W*
 * Vaporflask Classic*
 * Vaporflask Lite*

@@ -22,44 +22,43 @@ import struct
 import hid
 
 from .dataflash import DataFlash
-from .helpers import cal_checksum
 
 
 class HIDTransfer(object):
-    """Generic Nuvoton HID Transfer device
+    """Generic Nuvoton HID Transfer device class.
 
     Attributes:
-        vid: USB vendor ID as an integer.
-        pid: USB product ID as an integer.
-        device_names: A dictionary mapping product IDs to device name bytestrings.
+        vid: USB vendor ID.
+        pid: USB product ID.
+        device_names: A dictionary mapping product IDs to
+                      device name strings.
         supported_device_names: A dictionary mapping device name to a list of
-                                bytestrings containing the names of
+                                strings containing the names of
                                 the products with compatible firmware
         hid_signature: A list containing the HID command signature (4 bytes).
-        device: A HIDAPI device for the VTC Mini.
+        device: A HIDAPI device.
         manufacturer: A string containing the device manufacturer.
         product: A string containing the product name.
         serial: A string conraining the product serial number.
-        data_flash: An instance of DataFlash containing the device data flash.
         ldrom: A Boolean value set to True if the device is booted to LDROM.
     """
 
     vid = 0x0416
     pid = 0x5020
-    device_names = {b'E052': "eVic-VTC Mini",
-                    b'E060': "Cuboid",
-                    b'W007': "Presa TC75W",
-                    b'W010': "Classic",
-                    b'W011': "Lite",
-                    b'W013': "Stout",
-                    b'W014': "Reuleaux RX200"}
-    supported_device_names = {b'E052': [b'E052', b'W007'],
-                              b'E060': [b'E060'],
-                              b'W007': [b'W007'],
-                              b'W010': [b'W010'],
-                              b'W011': [b'W011'],
-                              b'W013': [b'W013'],
-                              b'W014': [b'W014']}
+    device_names = {'E052': "eVic-VTC Mini",
+                    'E060': "Cuboid",
+                    'W007': "Presa TC75W",
+                    'W010': "Classic",
+                    'W011': "Lite",
+                    'W013': "Stout",
+                    'W014': "Reuleaux RX200"}
+    supported_device_names = {'E052': ['E052', 'W007'],
+                              'E060': ['E060'],
+                              'W007': ['W007'],
+                              'W010': ['W010'],
+                              'W011': ['W011'],
+                              'W013': ['W013'],
+                              'W014': ['W014']}
     # 0x43444948
     hid_signature = [0x48, 0x49, 0x44, 0x43]
 
@@ -68,7 +67,6 @@ class HIDTransfer(object):
         self.manufacturer = None
         self.product = None
         self.serial = None
-        self.data_flash = None
         self.ldrom = False
 
     @classmethod
@@ -76,9 +74,9 @@ class HIDTransfer(object):
         """Generates a Nuvoton HID command.
 
         Args:
-            cmdcode: The hid command as a single byte.
-            arg1:    First HID command argument.
-            arg2:    Second HID command argument.
+            cmdcode: A byte long HID command.
+            arg1: First HID command argument.
+            arg2: Second HID command argument.
 
         Returns:
             A list containing the full HID command.
@@ -87,62 +85,86 @@ class HIDTransfer(object):
         # Do not count the last 4 bytes (checksum)
         length = [14]
 
-        cmdcode = [byte for byte in bytearray(struct.pack('=B', cmdcode))]
-        arg1 = [byte for byte in bytearray(struct.pack('=I', arg1))]
-        arg2 = [byte for byte in bytearray(struct.pack('=I', arg2))]
+        # Construct the command
+        cmdcode = list(struct.pack('=B', cmdcode))
+        arg1 = list(struct.pack('=I', arg1))
+        arg2 = list(struct.pack('=I', arg2))
         cmd = cmdcode + length + arg1 + arg2 + cls.hid_signature
-        return cmd + [byte for byte in cal_checksum(cmd)]
 
-    def attach(self):
-        """Opens the USB device.
+        # Return the command with checksum tacked at the end
+        return cmd + list(struct.pack('=I', sum(cmd)))
 
-        Opens the device and retrieves the device attributes.
+    def connect(self):
+        """Connects the USB device.
+
+        Connects the device and saves the USB device info attributes.
         """
 
         self.device.open(self.vid, self.pid)
-        self.manufacturer = self.device.get_manufacturer_string()
-        self.product = self.device.get_product_string()
-        self.serial = self.device.get_serial_number_string()
+        if not self.manufacturer:
+            self.manufacturer = self.device.get_manufacturer_string()
+            self.product = self.device.get_product_string()
+            self.serial = self.device.get_serial_number_string()
 
     def get_sys_data(self):
-        """Reads the device data flash
+        """Reads the device data flash.
 
-        Writes the HID command for reading the data flash
-        and retrieves the data flash to the data_flash attribute as an instance
-        of DataFlash.
-        Sets the ldrom attribute to True if the device is booted to LDROM.
+        ldrom attribute will be set to to True if the device is in LDROM.
+
+        Returns:
+            A tuple containing the data flash and its checksum.
         """
 
         start = 0
         end = 2048
 
+        # Send the command for reading the data flash
         read_df = self.hidcmd(0x35, start, end)
         self.write(read_df)
 
-        self.data_flash = DataFlash(self.read(end))
+        # Read the dataflash
+        buf = self.read(end)
+        dataflash = DataFlash(buf[4:], 0)
 
-        self.ldrom = self.data_flash.fw_version == 0
+        # Something is wrong, try re-reading
+        if dataflash.unknown1 or not dataflash.fw_version:
+            self.write(read_df)
+            buf = self.read(end)
+            dataflash = DataFlash(buf[4:], 0)
+
+        # Get the checksum from the beginning of the data flash transfer
+        checksum = struct.unpack('=I', bytearray(buf[0:4]))[0]
+
+        # Are we booted to LDROM?
+        self.ldrom = dataflash.fw_version == 0
+
+        return (dataflash, checksum)
 
     def write(self, data):
         """Writes data to the device.
 
         Args:
-            data: A list containing binary data.
+            data: An iterable containing the binary data.
 
         Raises:
             IOError: Incorrect amount of bytes was written.
         """
 
         bytes_written = 0
+
+        # Split the data into 64 byte long chunks
         chunks = [data[i:i+64] for i in range(0, len(data), 64)]
+
+        # Write the chunks to the device
         for chunk in chunks:
-            buf = [0] + chunk
+            buf = [0] + chunk  # First byte is the report number
             bytes_written += self.device.write(buf) - 1
 
         # Windows always writes full pages
         if bytes_written > len(data):
             bytes_written -= 64 - (len(data) % 64)
 
+        # Raise IOerror if the amount sent doesn't match what we wanted
         if bytes_written != len(data):
             raise IOError("HID Write failed.")
 
@@ -150,10 +172,10 @@ class HIDTransfer(object):
         """Reads data from the device.
 
         Args:
-            length: Amount of bytes bytes to read.
+            length: Amount of bytes to read.
 
         Returns:
-            A list containing binary data.
+            A list containing the binary data.
 
         Raises:
             IOError: Incorrect amount of bytes was read.
@@ -170,47 +192,49 @@ class HIDTransfer(object):
         if len(data) > length:
             data = data[:length]
 
+        # Raise IOerror if the amount read doesn't match what we wanted
         if len(data) != length:
             raise IOError("HID read failed")
 
         return data
 
-    def set_sys_data(self, data_flash):
-        """Writes the device data flash.
-
-        Writes the HID command for writing the data flash
-        and writes the first 2048 bytes from the data_flash argument
-        to the device data flash.
+    def set_sys_data(self, dataflash):
+        """Writes the data flash to the device.
 
         Args:
-            data_flash: A DataFlash object.
+            dataflash: A DataFlash object.
         """
 
+        # We want 2048 bytes
         start = 0
         end = 2048
 
+        # Send the command for writing the data flash
         write_df = self.hidcmd(0x53, start, end)
         self.write(write_df)
 
-        self.write(list(data_flash.data))
+        # Add checksum of the data in front of it
+        buf = list(struct.pack("=I", sum(dataflash.array))) + dataflash.array
+
+        self.write(buf)
 
     def reset_system(self):
-        """Sends the HID command for resetting the system (0xB4)
+        """Sends the HID command for resetting the system (0xB4)"""
 
-        """
         reset = self.hidcmd(0xB4, 0, 0)
         self.write(reset)
 
     def upload_aprom(self, aprom):
-        """Writes APROM to the the device.
+        """Writes the APROM to the the device.
 
         Args:
-            aprom: A BinFile object containing unencrypted APROM image.
+            aprom: A BinFile object containing an unencrypted APROM image.
         """
 
         start = 0
         end = len(aprom.data)
 
+        # Send the command for writing the APROM
         write_aprom = self.hidcmd(0xC3, start, end)
         self.write(write_aprom)
 

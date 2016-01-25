@@ -22,5 +22,5 @@ __version__ = '0.1.dev0'
 
 from .device import HIDTransfer
 from .helpers import cal_checksum
-from .binfile import BinFile, FirmwareError
+from .aprom import APROM, APROMError
 from .dataflash import DataFlash, DataFlashError

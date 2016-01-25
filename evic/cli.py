@@ -28,19 +28,6 @@ import click
 import evic
 
 
-class Context(object):
-    """Click context.
-
-    Attributes:
-        dev: An instance of evic.HIDTransfer.
-    """
-
-    def __init__(self):
-        self.dev = evic.HIDTransfer()
-
-pass_context = click.make_pass_decorator(Context, ensure=True)
-
-
 @contextmanager
 def handle_exceptions(*exceptions):
     """Context for handling exceptions."""
@@ -61,18 +48,30 @@ def main():
     pass
 
 
-def find_dev(dev):
-    """Attaches the USB device.
-
-    Attaches the device and prints the device information to the screen.
+def connect(dev):
+    """Connects the USB device.
 
     Args:
-        dev: An instance of the device.
+        dev: evic.HIDTransfer object.
+
+    Raises:
+        IOerror: The device was not found
     """
 
+    # Connect the device
     with handle_exceptions(IOError):
         click.echo("\nFinding device...", nl=False)
-        dev.attach()
+        dev.connect()
+        if not dev.manufacturer:
+            raise IOError("Device not found.")
+
+
+def print_usb_info(dev):
+    """Prints the USB information attributes of the device
+
+    Args:
+        dev: evic.HIDTransfer object
+    """
 
     click.echo("\tManufacturer: ", nl=False)
     click.secho(dev.manufacturer, bold=True)
@@ -83,141 +82,185 @@ def find_dev(dev):
     click.echo("")
 
 
-def read_data_flash(dev):
-    """Reads the data flash from the device.
+def read_dataflash(dev, verify):
+    """Reads the device data flash.
 
     Args:
-        dev: An instance of the attached device.
+        dev: evic.HIDTransfer object.
+        verify: A Boolean set to True to verify the data flash.
+
+    Returns:
+        evic.DataFlash object containing the device data flash.
     """
 
+    # Read the data flash
     with handle_exceptions(IOError):
         click.echo("Reading data flash...", nl=False)
-        dev.get_sys_data()
-        if struct.unpack("=I", dev.data_flash.data[264:268])[0] \
-                or not dev.data_flash.fw_version:
-            dev.get_sys_data()
+        dataflash, checksum = dev.get_sys_data()
 
-    if dev.data_flash.device_name in dev.device_names:
-        devicename = dev.device_names[dev.data_flash.device_name]
-    else:
-        devicename = "Unknown device"
+    # Verify the data flash
+    if verify:
+        verify_dataflash(dataflash, checksum)
 
+    return dataflash
+
+
+def print_device_info(dev, dataflash):
+    """Prints the device information found from data flash.
+
+    Args:
+        dev: evic.HIDTransfer object.
+        dataflash: evic.DataFlash object.
+    """
+
+    # Find the device name
+    devicename = dev.device_names.get(dataflash.device_name, "Unknown device")
+
+    # Print out the information
     click.echo("\tDevice name: ", nl=False)
     click.secho(devicename, bold=True)
     click.echo("\tFirmware version: ", nl=False)
-    click.secho("{0:.2f}".format(dev.data_flash.fw_version / 100.0), bold=True)
+    click.secho("{0:.2f}".format(dataflash.fw_version / 100.0), bold=True)
     click.echo("\tHardware version: ", nl=False)
-    click.secho("{0:.2f}\n".format(
-        dev.data_flash.hw_version / 100.0), bold=True)
+    click.secho("{0:.2f}\n".format(dataflash.hw_version / 100.0), bold=True)
 
-    if dev.data_flash.hw_version > 1000:
+    # Issue a warning about unset hardware version number
+    if dataflash.hw_version > 1000:
         click.echo("Please set the hardware version.")
 
 
-def verify_dataflash(data_flash):
+def verify_dataflash(dataflash, checksum):
     """Verifies that the data flash is correct.
 
     Args:
-        data_flash: An instance of evic.DataFlash.
+        data_flash: evic.DataFlash object.
+        checksum: Checksum used for the verification.
     """
 
     with handle_exceptions(evic.DataFlashError):
         click.echo("Verifying data flash...", nl=False)
-        data_flash.verify()
+        dataflash.verify(checksum)
 
 
 @main.command()
-@click.argument('input', type=click.File('rb'))
+@click.argument('inputfile', type=click.File('rb'))
 @click.option('--encrypted/--unencrypted', '-e/-u', default=True,
               help='Use encrypted/unencrypted image. Defaults to encrypted.')
-@click.option('--dataflash', '-d', type=click.File('rb'),
+@click.option('--dataflash', 'dataflashfile', '-d', type=click.File('rb'),
               help='Use data flash from a file.')
 @click.option('--no-verify', 'noverify',
               type=click.Choice(['aprom', 'dataflash']), multiple=True,
               help='Disable verification for APROM or data flash.')
-@pass_context
-def upload(ctx, input, encrypted, dataflash, noverify):
+def upload(inputfile, encrypted, dataflashfile, noverify):
     """Upload an APROM image to the device."""
 
-    find_dev(ctx.dev)
-    read_data_flash(ctx.dev)
-    if 'dataflash' not in noverify:
-        verify_dataflash(ctx.dev.data_flash)
+    dev = evic.HIDTransfer()
 
-    binfile = evic.BinFile(input.read())
-    if not encrypted:
-        aprom = binfile
-    else:
-        aprom = evic.BinFile(binfile.convert())
+    # Connect the device
+    connect(dev)
 
+    # Print the USB info of the device
+    print_usb_info(dev)
+
+    # Read the data flash
+    verify = 'dataflash' not in noverify
+    dataflash = read_dataflash(dev, verify)
+
+    # Print the device information
+    print_device_info(dev, dataflash)
+
+    # Read the APROM image
+    aprom = evic.APROM(inputfile.read())
+    if encrypted:
+        aprom = evic.APROM(aprom.convert())
+
+    # Verify the APROM image
     if 'aprom' not in noverify:
-        with handle_exceptions(evic.FirmwareError):
+        with handle_exceptions(evic.APROMError):
             click.echo("Verifying APROM...", nl=False)
             aprom.verify(
-                ctx.dev.supported_device_names[ctx.dev.data_flash.device_name],
-                ctx.dev.data_flash.hw_version)
+                dev.supported_device_names[dataflash.device_name],
+                dataflash.hw_version)
 
-    if dataflash:
-        data_flash_file = evic.DataFlash(dataflash.read())
+    # Are we using a data flash file?
+    if dataflashfile:
+        buf = list(dataflashfile.read())
+        # We used to store the checksum inside the file
+        if len(buf) == 2048:
+            checksum = struct.unpack("=I", bytearray(buf[0:4]))[0]
+            dataflash = evic.DataFlash(buf[4:], 0)
+        else:
+            checksum = sum(buf)
+            dataflash = evic.DataFlash(buf, 0)
         if 'dataflash' not in noverify:
-            verify_dataflash(data_flash_file)
-        data_flash = data_flash_file
-    else:
-        data_flash = ctx.dev.data_flash
+            verify_dataflash(dataflash, checksum)
 
-    data_flash.bootflag = 1
+    # We want to boot to LDROM on restart
+    dataflash.bootflag = 1
 
     # Flashing Presa firmware requires HW version <=1.03 on type A devices
-    if b'W007' in aprom.data and data_flash.device_name == b'E052' \
-            and data_flash.hw_version in [106, 108, 109, 111]:
+    if b'W007' in aprom.data and dataflash.device_name == 'E052' \
+            and dataflash.hw_version in [106, 108, 109, 111]:
         click.echo("Changing HW version to 1.03...", nl=False)
-        data_flash.hw_version = 103
+        dataflash.hw_version = 103
         click.secho("OK", fg='green', bold=True)
 
+    # Write data flash to the device
     with handle_exceptions(IOError):
         click.echo("Writing data flash...", nl=False)
-        ctx.dev.set_sys_data(data_flash)
+        dev.set_sys_data(dataflash)
         click.secho("OK", fg='green', bold=True)
-        if not ctx.dev.ldrom:
-            click.echo("Restarting the device...", nl=False)
-            ctx.dev.reset_system()
-            sleep(2)
-            click.secho("OK", fg='green', bold=True)
-            click.echo("Reconnecting the device...", nl=False)
-            ctx.dev.attach()
-            click.secho("OK", fg='green', bold=True)
 
+        # We should only restart if we're not in LDROM
+        if not dev.ldrom:
+            # Restart
+            click.echo("Restarting the device...", nl=False)
+            dev.reset_system()
+            sleep(2)
+            click.secho("OK", fg='green', nl=False, bold=True)
+            # Reconnect
+            connect(dev)
+
+        # Write APROM to the device
         click.echo("Writing APROM...", nl=False)
-        ctx.dev.upload_aprom(aprom)
+        dev.upload_aprom(aprom)
 
 
 @main.command('dump-dataflash')
 @click.option('--output', '-o', type=click.File('wb'))
 @click.option('--no-verify', 'noverify', is_flag=True,
               help='Disable verification.')
-@pass_context
-def dumpdataflash(ctx, output, noverify):
+def dumpdataflash(output, noverify):
     """Write device data flash to a file."""
 
-    find_dev(ctx.dev)
-    read_data_flash(ctx.dev)
-    if not noverify:
-        verify_dataflash(ctx.dev.data_flash)
+    dev = evic.HIDTransfer()
 
+    # Connect the device
+    connect(dev)
+
+    # Print the USB info of the device
+    print_usb_info(dev)
+
+    # Read the data flash
+    dataflash = read_dataflash(dev, noverify)
+
+    # Print the device information
+    print_device_info(dev, dataflash)
+
+    # Write the data flash to the file
     with handle_exceptions(IOError):
         click.echo("Writing data flash to the file...", nl=False)
-        output.write(ctx.dev.data_flash.data)
+        output.write(bytearray(dataflash.array))
 
 
 @main.command()
-@click.argument('input', type=click.File('rb'))
+@click.argument('inputfile', type=click.File('rb'))
 @click.option('--output', '-o', type=click.File('wb'))
-def convert(input, output):
+def convert(inputfile, output):
     """Decrypt/encrypt an APROM image."""
 
-    infile = evic.BinFile(input.read())
-    outfile = evic.BinFile(infile.convert())
+    binfile = evic.APROM(inputfile.read())
 
     with handle_exceptions(IOError):
         click.echo("Writing APROM image...", nl=False)
-        output.write(outfile.data)
+        output.write(binfile.convert())

@@ -17,9 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import struct
-
-from .helpers import cal_checksum
+import binstruct
 
 
 class DataFlashError(Exception):
@@ -28,91 +26,37 @@ class DataFlashError(Exception):
     pass
 
 
-class DataFlash(object):
+class DataFlash(binstruct.StructTemplate):
     """Device data flash class.
 
     Attributes:
-        data: A bytearray containing binary data of the data flash.
-        device_name: A bytestring containing device name.
-        hw_version: An integer hardware version.
-        fw_version: An integer firmware version.
+        hw_version: An integer hardware version number.
         bootflag: 0 or 1. Controls whether APROM or LDROM is booted
-                when the device is restarted.
-                0 = APROM
-                1 = LDROM
-        checksum: A bytearray containing checksum for the data flash.
+                  when the device is restarted.
+                    0 = APROM
+                    1 = LDROM
+        device_name: Device name string.
+        fw_version: An integer firmware version number.
+        unknown1: TODO
+        unknown2: TODO
     """
 
-    def __init__(self, data):
-        self.data = bytearray(data)
-        self._device_name = bytes(self.data[316:320])
-        self._hw_version = struct.unpack("=I", self.data[8:12])[0]
-        self._fw_version = struct.unpack("=I", self.data[260:264])[0]
-        self._bootflag = self.data[13]
-        self._checksum = self.data[0:4]
+    hw_version = binstruct.Int32Field(4)
+    bootflag = binstruct.Int8Field(9)
+    device_name = binstruct.StringField(312, 4)
+    fw_version = binstruct.Int32Field(256)
+    unknown1 = binstruct.Int32Field(260)
+    unknown2 = binstruct.Int32Field(264)
 
-    @property
-    def device_name(self):
-        return self._device_name
+    def verify(self, checksum):
+        """Verifies the data flash against given checksum.
 
-    @device_name.setter
-    def device_name(self, device_name):
-        self.device_name = device_name
-        self.data[316:320] = bytearray(struct.pack("4s", device_name))
-        self.update_checksum()
-
-    @property
-    def hw_version(self):
-        return self._hw_version
-
-    @hw_version.setter
-    def hw_version(self, version):
-        self._hw_version = version
-        self.data[8:12] = bytearray(struct.pack("=I", version))
-        self.update_checksum()
-
-    @property
-    def fw_version(self):
-        return self._fw_version
-
-    @fw_version.setter
-    def fw_version(self, version):
-        self._fw_version = version
-        self.data[260:264] = bytearray(struct.pack("=I", version))
-        self.update_checksum()
-
-    @property
-    def bootflag(self):
-        return self._bootflag
-
-    @bootflag.setter
-    def bootflag(self, flag):
-        self._bootflag = flag
-        self.data[13] = flag
-        self.update_checksum()
-
-    @property
-    def checksum(self):
-        return self._checksum
-
-    @checksum.setter
-    def checksum(self, checksum):
-        self._checksum = checksum
-        self.data[0:4] = checksum
-
-    def update_checksum(self):
-        """Updates the checksum for the data flash data."""
-
-        self.checksum = cal_checksum(self.data[4:])
-
-    def verify(self):
-        """Verifies the data flash.
+        Args:
+            checksum: Checksum of the data.
 
         Raises:
             DataFlashError: Data flash verification failed.
         """
 
-        if cal_checksum(self.data[4:]) != self.checksum \
-                or not struct.unpack("=I", self.checksum)[0] \
-                | struct.unpack("=I", self.data[268:272])[0]:
-            raise DataFlashError("Data flash verification failed")
+        if sum(self.array) != checksum or not checksum | self.unknown2:
+            raise DataFlashError("Data flash verification failed.")

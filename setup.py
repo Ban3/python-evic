@@ -17,6 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along
 """
+
 import ez_setup
 ez_setup.use_setuptools()
 
@@ -25,8 +26,9 @@ from setuptools import setup
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
-requirements = [
+REQUIREMENTS = [
     'hidapi>=0.7.99',
+    'binstruct',
     'click'
 ]
 
@@ -37,10 +39,10 @@ setup(
     author_email="jussi.timperi@iki.fi",
     description=("Evic is a USB programmer for devices based on the Joyetech Evic VTC Mini."),
     license="GPL",
-    keywords="ecig electronic cigarette evic joyetech presa",
+    keywords="ecig electronic cigarette evic joyetech presa wismec",
     url="https://github.com/Ban3/python-evic",
     packages=['evic'],
-    install_requires=requirements,
+    install_requires=REQUIREMENTS,
     long_description=readme,
     classifiers=[
         "Development Status :: 4 - Beta",

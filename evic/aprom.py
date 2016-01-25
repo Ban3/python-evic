@@ -17,18 +17,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import struct
 
-class FirmwareError(Exception):
-    """Firmware verification error."""
+
+class APROMError(Exception):
+    """APROM verification error."""
 
     pass
 
 
-class BinFile(object):
-    """Firmware binary file class
+class APROM(object):
+    """APROM file class
 
     Attributes:
-        data: A bytearray containing binary data of the firmware.
+        data: A bytearray containing the binary data of the firmware.
     """
 
     def __init__(self, data):
@@ -39,8 +41,8 @@ class BinFile(object):
         """Generator function for decrypting/encrypting the binary file.
 
         Args:
-            filesize: An integer, filesize of the binary file.
-            index: An integer, index of the byte that is being decrypted.
+            filesize: Filesize of the APROM file in bytes.
+            index: Index of the byte being converted.
         """
 
         return filesize + 408376 + index - filesize // 408376
@@ -59,7 +61,9 @@ class BinFile(object):
         return data
 
     def verify(self, product_names, hw_version):
-        """Verifies the data unencrypted firmware.
+        """Verifies the contained data.
+
+        Data needs to be unencrypted.
 
         Args:
             product_names: A list of supported product names for the device.
@@ -69,25 +73,32 @@ class BinFile(object):
             FirmwareException: Verification failed.
 
         """
+
+        # Does the APROM contain the string "Joyetech APROM"?
         if b'Joyetech APROM' not in self.data:
-            raise FirmwareError(
-                "Firmware manufacturer verification failed.")
+            raise APROMError("Firmware manufacturer verification failed.")
 
         id_ind = 0
         max_hw_version = 0
+        # Try to locate supported product IDs
         for product_name in product_names:
             try:
+                product_name = product_name.encode()
                 id_ind = self.data.index(product_name)
+                # Maximum hardware version follows the product ID
                 max_hw_ind = id_ind + len(product_name)
-                max_hw_version = (self.data[max_hw_ind] * 100) + \
-                    (self.data[max_hw_ind + 1] * 10) + \
-                    (self.data[max_hw_ind + 2])
+                max_hw_version = struct.unpack("=I", b'\x00' +
+                                               self.data[max_hw_ind:max_hw_ind+3])[0]
                 break
+            # Product ID was not found, try the next one
             except ValueError:
                 continue
-        if id_ind:
-            if max_hw_version < hw_version:
-                raise FirmwareError(
-                    "Firmware hardware version verification failed.")
-        else:
-            raise FirmwareError("Firmware device name verification failed.")
+
+        # Raise an error if none of the supported product IDs were found
+        if not id_ind:
+            raise APROMError("Firmware device name verification failed.")
+
+        # Raise an error if the maximum supported hardware version is less than
+        # the supplied hardware version
+        if max_hw_version < hw_version:
+            raise APROMError("Firmware hardware version verification failed.")

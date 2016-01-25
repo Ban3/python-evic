@@ -35,7 +35,8 @@ class HIDTransfer(object):
         supported_product_ids: A dictionary mapping product ID to a list of
                                strings containing the IDs of the products
                                with compatible firmware.
-        hid_signature: A list containing the HID command signature (4 bytes).
+        hid_signature: A bytearray containing the HID command signature
+                       (4 bytes).
         device: A HIDAPI device.
         manufacturer: A string containing the device manufacturer.
         product: A string containing the product name.

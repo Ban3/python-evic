@@ -60,7 +60,7 @@ class APROM(object):
                        self._genfun(len(self.data), i)) & 0xFF
         return data
 
-    def verify(self, product_names, hw_version):
+    def verify(self, product_ids, hw_version):
         """Verifies the contained data.
 
         Data needs to be unencrypted.
@@ -81,12 +81,12 @@ class APROM(object):
         id_ind = 0
         max_hw_version = 0
         # Try to locate supported product IDs
-        for product_name in product_names:
+        for product_id in product_ids:
             try:
-                product_name = product_name.encode()
-                id_ind = self.data.index(product_name)
+                product_id = product_id.encode()
+                id_ind = self.data.index(product_id)
                 # Maximum hardware version follows the product ID
-                max_hw_ind = id_ind + len(product_name)
+                max_hw_ind = id_ind + len(product_id)
                 max_hw_version = struct.unpack("=I", b'\x00' +
                                                self.data[max_hw_ind:max_hw_ind+3])[0]
                 break

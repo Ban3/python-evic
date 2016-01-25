@@ -35,7 +35,7 @@ class DataFlash(binstruct.StructTemplate):
                   when the device is restarted.
                     0 = APROM
                     1 = LDROM
-        device_name: Device name string.
+        product_id: Product ID string.
         fw_version: An integer firmware version number.
         unknown1: TODO
         unknown2: TODO
@@ -43,7 +43,7 @@ class DataFlash(binstruct.StructTemplate):
 
     hw_version = binstruct.Int32Field(4)
     bootflag = binstruct.Int8Field(9)
-    device_name = binstruct.StringField(312, 4)
+    product_id = binstruct.StringField(312, 4)
     fw_version = binstruct.Int32Field(256)
     unknown1 = binstruct.Int32Field(260)
     unknown2 = binstruct.Int32Field(264)

@@ -96,7 +96,7 @@ def read_dataflash(dev, verify):
     # Read the data flash
     with handle_exceptions(IOError):
         click.echo("Reading data flash...", nl=False)
-        dataflash, checksum = dev.get_sys_data()
+        dataflash, checksum = dev.read_dataflash()
 
     # Verify the data flash
     if verify:
@@ -113,12 +113,13 @@ def print_device_info(dev, dataflash):
         dataflash: evic.DataFlash object.
     """
 
-    # Find the device name
-    devicename = dev.device_names.get(dataflash.device_name, "Unknown device")
+    # Find the product name
+    product_name = dev.product_names.get(dataflash.product_id,
+                                         "Unknown device")
 
     # Print out the information
     click.echo("\tDevice name: ", nl=False)
-    click.secho(devicename, bold=True)
+    click.secho(product_name, bold=True)
     click.echo("\tFirmware version: ", nl=False)
     click.secho("{0:.2f}".format(dataflash.fw_version / 100.0), bold=True)
     click.echo("\tHardware version: ", nl=False)
@@ -179,15 +180,15 @@ def upload(inputfile, encrypted, dataflashfile, noverify):
         with handle_exceptions(evic.APROMError):
             click.echo("Verifying APROM...", nl=False)
             aprom.verify(
-                dev.supported_device_names[dataflash.device_name],
+                dev.supported_product_ids[dataflash.product_id],
                 dataflash.hw_version)
 
     # Are we using a data flash file?
     if dataflashfile:
-        buf = list(dataflashfile.read())
+        buf = bytearray(dataflashfile.read())
         # We used to store the checksum inside the file
         if len(buf) == 2048:
-            checksum = struct.unpack("=I", bytearray(buf[0:4]))[0]
+            checksum = struct.unpack("=I", buf[0:4])[0]
             dataflash = evic.DataFlash(buf[4:], 0)
         else:
             checksum = sum(buf)
@@ -199,7 +200,7 @@ def upload(inputfile, encrypted, dataflashfile, noverify):
     dataflash.bootflag = 1
 
     # Flashing Presa firmware requires HW version <=1.03 on type A devices
-    if b'W007' in aprom.data and dataflash.device_name == 'E052' \
+    if b'W007' in aprom.data and dataflash.product_id == 'E052' \
             and dataflash.hw_version in [106, 108, 109, 111]:
         click.echo("Changing HW version to 1.03...", nl=False)
         dataflash.hw_version = 103
@@ -208,14 +209,14 @@ def upload(inputfile, encrypted, dataflashfile, noverify):
     # Write data flash to the device
     with handle_exceptions(IOError):
         click.echo("Writing data flash...", nl=False)
-        dev.set_sys_data(dataflash)
+        dev.write_dataflash(dataflash)
         click.secho("OK", fg='green', bold=True)
 
         # We should only restart if we're not in LDROM
         if not dev.ldrom:
             # Restart
             click.echo("Restarting the device...", nl=False)
-            dev.reset_system()
+            dev.reset()
             sleep(2)
             click.secho("OK", fg='green', nl=False, bold=True)
             # Reconnect
@@ -223,7 +224,7 @@ def upload(inputfile, encrypted, dataflashfile, noverify):
 
         # Write APROM to the device
         click.echo("Writing APROM...", nl=False)
-        dev.upload_aprom(aprom)
+        dev.write_aprom(aprom)
 
 
 @main.command('dump-dataflash')
@@ -250,7 +251,7 @@ def dumpdataflash(output, noverify):
     # Write the data flash to the file
     with handle_exceptions(IOError):
         click.echo("Writing data flash to the file...", nl=False)
-        output.write(bytearray(dataflash.array))
+        output.write(dataflash.array)
 
 
 @main.command()

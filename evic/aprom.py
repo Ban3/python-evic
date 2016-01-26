@@ -66,7 +66,7 @@ class APROM(object):
         Data needs to be unencrypted.
 
         Args:
-            product_names: A list of supported product names for the device.
+            product_ids: A list of supported product IDs for the device.
             hw_version: An integer device hardware version.
 
         Raises:

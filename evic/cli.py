@@ -188,7 +188,7 @@ def upload(inputfile, encrypted, dataflashfile, noverify):
         buf = bytearray(dataflashfile.read())
         # We used to store the checksum inside the file
         if len(buf) == 2048:
-            checksum = struct.unpack("=I", buf[0:4])[0]
+            checksum = struct.unpack("=I", bytes(buf[0:4]))[0]
             dataflash = evic.DataFlash(buf[4:], 0)
         else:
             checksum = sum(buf)

@@ -87,8 +87,8 @@ class APROM(object):
                 id_ind = self.data.index(product_id)
                 # Maximum hardware version follows the product ID
                 max_hw_ind = id_ind + len(product_id)
-                max_hw_version = struct.unpack("=I", b'\x00' +
-                                               self.data[max_hw_ind:max_hw_ind+3])[0]
+                max_hw_version = struct.unpack("=I", bytes(b'\x00' +
+                                                           self.data[max_hw_ind:max_hw_ind+3]))[0]
                 break
             # Product ID was not found, try the next one
             except ValueError:

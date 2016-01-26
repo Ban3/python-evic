@@ -42,7 +42,7 @@ class TestDataFlash:
             assert dataflash.bootflag == 1
             assert dataflash.array[9] == 1
             assert dataflash.hw_version == 106
-            assert struct.unpack("=I", dataflash.array[4:8])[0] == 106
+            assert struct.unpack("=I", bytes(dataflash.array[4:8]))[0] == 106
 
     def test_dataflash_verify(self):
         with open("testdata/test_dataflash.bin", "rb") as dataflashfile:

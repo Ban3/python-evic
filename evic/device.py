@@ -134,7 +134,7 @@ class HIDTransfer(object):
             dataflash = DataFlash(buf[4:], 0)
 
         # Get the checksum from the beginning of the data flash transfer
-        checksum = struct.unpack('=I', buf[0:4])[0]
+        checksum = struct.unpack('=I', bytes(buf[0:4]))[0]
 
         # Are we booted to LDROM?
         self.ldrom = dataflash.fw_version == 0

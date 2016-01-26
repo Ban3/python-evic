@@ -1,5 +1,4 @@
 env:
-- TOXENV=py35
 - TOXENV=py34
 - TOXENV=py33
 - TOXENV=py27
@@ -16,15 +15,16 @@ install: pip install -U tox
 
 language: python
 
-python:
-    - "2.6"
-    - "2.7"
-    - "3.2"
-    - "3.3"
-    - "3.4"
-    - "3.5"
+matrix:
+  include:
+    - python: 3.5
+      env: TOXENV=py35
 
 script: tox
+cache:
+  directories:
+    - .tox
+    - $HOME/.cache/pip
 
 deploy:
   provider: pypi

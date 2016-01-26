@@ -1,7 +1,10 @@
 include LICENSE
 include README.rst
+include Makefile
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
-recursive-include * *.rst Makefile
+recursive-include * *.rst
+
+recursive-include udev *

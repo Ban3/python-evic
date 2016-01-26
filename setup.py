@@ -42,7 +42,10 @@ setup(
     keywords="ecig electronic cigarette evic joyetech presa wismec",
     url="https://github.com/Ban3/python-evic",
     packages=['evic'],
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
     install_requires=REQUIREMENTS,
+    data_files=[('udev', ['udev/99-nuvoton-hid.rules'])],
     long_description=readme,
     classifiers=[
         "Development Status :: 4 - Beta",

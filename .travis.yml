@@ -1,0 +1,36 @@
+env:
+- TOXENV=py35
+- TOXENV=py34
+- TOXENV=py33
+- TOXENV=py27
+- TOXENV=py26
+- TOXENV=pypy
+
+install: pip install -U tox
+
+language: python
+
+script: tox
+
+deploy:
+  provider: pypi
+  password:
+    secure: !!binary |
+      VHNRS0I3QlFmTFlzVVhJQk5zM1JUWUxjUkpidU5ZMk0vYS9PM3NuYjMyV2sxQm9uTkk4UzIzT1Zh
+      cFZnUnpZdDdaTU9xRlJDWmF0VENRWnlPRE9vSldqa1BXQ3lMNVZXODJWVWlrcEM3TjhES3ByOEM4
+      L2xITkNaeHJhNmtWY3Y4S21PWVZaNUJCSksvY2dGQ2JJYURPN2E2L3E2SmZoRG80YmJLcDAwbmZX
+      ejh1d1I5ejg2V2FCbm9aQVdrOSs3ZGc2MW43WXJHaU9mSGozRFhLZWdyUlhmMHBNcTRVWUJjZTAv
+      eFlDWHdYcFNMQnNMZUZvU0p1bmczeDhGNWY2WXcwSWRzaXFFTnVENmQvYkZzK1JYaEd2REQ1RjJF
+      ZXMycnYrM3VVZzZwUEJMWk1mbjBTeGEwMDNkWG1YczhhSXFRL2hzR2oxNTl3MjE2MW5nNzJaRDlq
+      YVJuV2Z5RDhJdzZpWm9XeHh6ei9kaXJ5VVU5NVBRdUN1UzI0dndaZ1ZNVXp2SXB2RG5nV2JYYWwy
+      K05PcnNwdUtEeVpQR2trTmxlUUVGcS92MkY4NFY4aGtPNDV3TStmRGlCVkNuQmtpUUQ4aEhzRTB5
+      TUpCSFpjRTM1ajZPdHlwVHBtMXJ5aXhlSFpxcXo2ckNGVVM3MzNjaTNTZi9RWndodklMMGZ6L29Q
+      YUllZlRZYmZ6WXVmWEgxaU5QNEJpMGxpZjVBVnpMZTZYZGdjY3VzY25OK2c4MWZHeVB2MlgxR3pD
+      S2pCclpSTWZFOHVhK3I0MnZkOU01L2R2dkM3dzFIV3ZMSVRvTHZyeVlrd0lPdU94L0dudFRxN3pP
+      c1licDhiOU1UMkplbXkzR0daa0ZNNlkwWnhsRWZKMGNHdVFXNnY3ZDUyZEZ2VUE1UDM5Q2J6b1E9
+  user: Ban3
+  distributions: sdist bdist_wheel
+  on:
+    condition: $TOXENV == py27
+    repo: Ban3/python-evic
+    tags: true

@@ -2,6 +2,9 @@
 Evic
 ===============================
 
+.. image:: https://travis-ci.org/Ban3/python-evic.svg?branch=master
+   :target: https://travis-ci.org/Ban3/python-evic
+
 Evic is a USB programmer for devices based on the Joyetech Evic VTC Mini.
 
 Supported devices

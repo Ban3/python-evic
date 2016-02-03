@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 import sys
+import copy
 import struct
 from time import sleep
 from contextlib import contextmanager
@@ -166,6 +167,7 @@ def upload(inputfile, encrypted, dataflashfile, noverify):
     # Read the data flash
     verify = 'dataflash' not in noverify
     dataflash = read_dataflash(dev, verify)
+    dataflash_original = copy.deepcopy(dataflash)
 
     # Print the device information
     print_device_info(dev, dataflash)
@@ -197,7 +199,8 @@ def upload(inputfile, encrypted, dataflashfile, noverify):
             verify_dataflash(dataflash, checksum)
 
     # We want to boot to LDROM on restart
-    dataflash.bootflag = 1
+    if not dev.ldrom:
+        dataflash.bootflag = 1
 
     # Flashing Presa firmware requires HW version <=1.03 on type A devices
     if b'W007' in aprom.data and dataflash.product_id == 'E052' \
@@ -208,9 +211,10 @@ def upload(inputfile, encrypted, dataflashfile, noverify):
 
     # Write data flash to the device
     with handle_exceptions(IOError):
-        click.echo("Writing data flash...", nl=False)
-        dev.write_dataflash(dataflash)
-        click.secho("OK", fg='green', bold=True)
+        if dataflash.array != dataflash_original.array:
+            click.echo("Writing data flash...", nl=False)
+            dev.write_dataflash(dataflash)
+            click.secho("OK", fg='green', bold=True)
 
         # We should only restart if we're not in LDROM
         if not dev.ldrom:

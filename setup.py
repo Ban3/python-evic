@@ -18,10 +18,13 @@ You should have received a copy of the GNU General Public License
 along
 """
 
-import ez_setup
-ez_setup.use_setuptools()
+try:
+    from setuptools import setup
+except ImportError:
+    import ez_setup
+    ez_setup.use_setuptools()
+    from setuptools import setup
 
-from setuptools import setup
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()

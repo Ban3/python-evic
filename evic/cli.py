@@ -213,6 +213,7 @@ def upload(inputfile, encrypted, dataflashfile, noverify):
     with handle_exceptions(IOError):
         if dataflash.array != dataflash_original.array:
             click.echo("Writing data flash...", nl=False)
+            sleep(0.1)
             dev.write_dataflash(dataflash)
             click.secho("OK", fg='green', bold=True)
 

@@ -270,3 +270,21 @@ def convert(inputfile, output):
     with handle_exceptions(IOError):
         click.echo("Writing APROM image...", nl=False)
         output.write(binfile.convert())
+
+
+@main.command('reset-dataflash')
+def resetdataflash():
+    """Reset device data flash."""
+
+    dev = evic.HIDTransfer()
+
+    # Connect the device
+    connect(dev)
+
+    # Print the USB info of the device
+    print_usb_info(dev)
+
+    # Reset data flash
+    with handle_exceptions(IOError):
+        click.echo("Resetting data flash...", nl=False)
+        dev.reset_dataflash()

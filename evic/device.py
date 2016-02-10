@@ -220,6 +220,15 @@ class HIDTransfer(object):
 
         self.write(buf)
 
+    def reset_dataflash(self):
+        """Resets the device data flash.
+
+        Sends a data flash reset request to the firmware.
+        """
+
+        reset_df = self.hidcmd(0x7C, 0, 0)
+        self.write(reset_df)
+
     def reset(self):
         """Sends the HID command for resetting the system (0xB4)"""
 

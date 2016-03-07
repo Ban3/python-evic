@@ -5,12 +5,6 @@ env:
 - TOXENV=py26
 - TOXENV=pypy
 
-addons:
-    apt:
-        packages:
-            - libudev-dev
-            - libusb-1.0-0-dev
-
 install: pip install -U tox
 
 language: python

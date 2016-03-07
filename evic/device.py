@@ -19,7 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import struct
 
-import hid
+try:
+    import hid
+    HIDAPI_AVAILABLE = True
+except ImportError:
+    HIDAPI_AVAILABLE = False
 
 from .dataflash import DataFlash
 
@@ -66,7 +70,10 @@ class HIDTransfer(object):
     hid_signature = bytearray(b'HIDC')
 
     def __init__(self):
-        self.device = hid.device()
+        if HIDAPI_AVAILABLE:
+            self.device = hid.device()
+        else:
+            self.device = None
         self.manufacturer = None
         self.product = None
         self.serial = None

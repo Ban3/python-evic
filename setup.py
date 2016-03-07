@@ -30,7 +30,6 @@ with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 REQUIREMENTS = [
-    'hidapi>=0.7.99',
     'binstruct',
     'click'
 ]
@@ -60,9 +59,12 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
+    extras_require={
+        'USB':  ['hidapi>=0.7.99'],
+    },
     entry_points={
         'console_scripts': [
             'evic-convert=evic.cli:convert',
-            'evic-usb=evic.cli:usb'],
+            'evic-usb=evic.cli:usb [USB]'],
     },
 )

@@ -12,6 +12,7 @@ Supported devices
 
 * Evic VTC Mini
 * Cuboid
+* iStick TC100W*
 * Presa TC75W*
 * Vaporflask Classic*
 * Vaporflask Lite*

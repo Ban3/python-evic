@@ -277,7 +277,14 @@ def resetdataflash():
         dev.reset_dataflash()
 
 
-@click.command()
+@click.group()
+def main():
+    """A USB programmer for devices based on the Joyetech Evic VTC Mini."""
+
+    pass
+
+
+@main.command()
 @click.argument('inputfile', type=click.File('rb'))
 @click.option('--output', '-o', type=click.File('wb'))
 def convert(inputfile, output):

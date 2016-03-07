@@ -1,3 +1,4 @@
+
 ===============================
 Evic
 ===============================
@@ -37,7 +38,7 @@ Installation
 Install from source:
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Building hidapi requires libusb headers and cython. On Arch Linux they can be obtained from the repositories by installing packages ``libusb`` and ``cython``. Debian based distributions will have packages ``libusb-1.0-0-dev`` and ``cython``.
+Using ``evic-usb`` requires ``cython-hidapi``.  Building ``cython-hidapi`` requires libusb headers and cython. On Arch Linux they can be obtained from the repositories by installing packages ``libusb`` and ``cython``. Debian based distributions will have packages ``libusb-1.0-0-dev`` and ``cython``.
 
 On Windows you will also need the correct compiler for your Python version. See `this <https://wiki.python.org/moin/WindowsCompilers>`_
 page for more information on setting up the compiler.
@@ -62,41 +63,45 @@ Usage
 -------
 See  ``--help`` for more information on a given command.
 
-|
-  
-Encrypt/decrypt a firmware image:
+evic-convert
+^^^^^^^^^^^^
+``evic-convert`` is a tool to encrypt/decrypt firmware images:
 
 ::
 
-    $ evic convert in.bin -o out.bin
+    $ evic-convert in.bin -o out.bin
+
+evic-usb
+^^^^^^^^^^^^
+``evic-usb`` is a tool for interfacing with the device through USB.
+
 
 Dump device data flash to a file:
 
 ::
 
-    $ evic dump-dataflash -o out.bin
+    $ evic-usb dump-dataflash -o out.bin
 
 Upload an encrypted firmware image to the device:
 
 ::
 
-    $ evic upload firmware.bin
+    $ evic-usb upload firmware.bin
 
 Upload an unencrypted firmware image to the device:
 
 ::
 
-    $ evic upload -u firmware.bin
+    $ evic-usb upload -u firmware.bin
 
 Upload a firmware image using data flash from a file:
 
 ::
 
-    $ evic upload -d data.bin firmware.bin
+    $ evic-usb upload -d data.bin firmware.bin
 
 Use  ``--no-verify`` to disable verification for APROM or data flash. To disable both:
 
-::  
+::
 
-    $ evic upload --no-verify aprom --no-verify dataflash firmware.bin
-
+    $ evic-usb upload --no-verify aprom --no-verify dataflash firmware.bin

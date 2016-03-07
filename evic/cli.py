@@ -43,7 +43,7 @@ def handle_exceptions(*exceptions):
 
 
 @click.group()
-def main():
+def usb():
     """A USB programmer for devices based on the Joyetech Evic VTC Mini."""
 
     pass
@@ -144,7 +144,7 @@ def verify_dataflash(dataflash, checksum):
         dataflash.verify(checksum)
 
 
-@main.command()
+@usb.command()
 @click.argument('inputfile', type=click.File('rb'))
 @click.option('--encrypted/--unencrypted', '-e/-u', default=True,
               help='Use encrypted/unencrypted image. Defaults to encrypted.')
@@ -232,7 +232,7 @@ def upload(inputfile, encrypted, dataflashfile, noverify):
         dev.write_aprom(aprom)
 
 
-@main.command('dump-dataflash')
+@usb.command('dump-dataflash')
 @click.option('--output', '-o', type=click.File('wb'))
 @click.option('--no-verify', 'noverify', is_flag=True,
               help='Disable verification.')
@@ -259,20 +259,7 @@ def dumpdataflash(output, noverify):
         output.write(dataflash.array)
 
 
-@main.command()
-@click.argument('inputfile', type=click.File('rb'))
-@click.option('--output', '-o', type=click.File('wb'))
-def convert(inputfile, output):
-    """Decrypt/encrypt an APROM image."""
-
-    binfile = evic.APROM(inputfile.read())
-
-    with handle_exceptions(IOError):
-        click.echo("Writing APROM image...", nl=False)
-        output.write(binfile.convert())
-
-
-@main.command('reset-dataflash')
+@usb.command('reset-dataflash')
 def resetdataflash():
     """Reset device data flash."""
 
@@ -288,3 +275,16 @@ def resetdataflash():
     with handle_exceptions(IOError):
         click.echo("Resetting data flash...", nl=False)
         dev.reset_dataflash()
+
+
+@click.command()
+@click.argument('inputfile', type=click.File('rb'))
+@click.option('--output', '-o', type=click.File('wb'))
+def convert(inputfile, output):
+    """Decrypt/encrypt an APROM image."""
+
+    binfile = evic.APROM(inputfile.read())
+
+    with handle_exceptions(IOError):
+        click.echo("Writing APROM image...", nl=False)
+        output.write(binfile.convert())

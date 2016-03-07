@@ -62,6 +62,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'evic=evic.cli:main'],
+            'evic-convert=evic.cli:convert',
+            'evic-usb=evic.cli:usb'],
     },
 )

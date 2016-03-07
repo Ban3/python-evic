@@ -33,16 +33,14 @@ class TestCli:
             with open('test_aprom.bin', 'wb') as apromfile:
                 apromfile.write(aprom_data)
 
-            result = runner.invoke(cli.main, ['convert',
-                                              'test_aprom.bin',
-                                              '-o',
-                                              'test_aprom_unencrypted.bin'])
+            result = runner.invoke(cli.convert, ['test_aprom.bin',
+                                                 '-o',
+                                                 'test_aprom_unencrypted.bin'])
             assert result.exit_code == 0
 
-            result = runner.invoke(cli.main, ['convert',
-                                              'test_aprom_unencrypted.bin',
-                                              '-o',
-                                              'test_aprom2.bin'])
+            result = runner.invoke(cli.convert, ['test_aprom_unencrypted.bin',
+                                                 '-o',
+                                                 'test_aprom2.bin'])
             assert result.exit_code == 0
 
             with open('test_aprom2.bin', 'rb') as apromfile:

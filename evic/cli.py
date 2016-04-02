@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 import sys
+import os
 import copy
 import struct
 from time import sleep
@@ -295,3 +296,4 @@ def convert(inputfile, output):
     with handle_exceptions(IOError):
         click.echo("Writing APROM image...", nl=False)
         output.write(binfile.convert())
+        os.chmod(output.name, os.stat(inputfile.name).st_mode)

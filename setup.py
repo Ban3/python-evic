@@ -32,7 +32,8 @@ with open('README.rst') as readme_file:
 REQUIREMENTS = [
     'binstruct',
     'bitarray',
-    'click'
+    'click',
+    'pillow'
 ]
 
 setup(

@@ -259,3 +259,19 @@ class HIDTransfer(object):
         self.write(write_aprom)
 
         self.write(aprom.data)
+
+    def write_logo(self, logo):
+        """Writes the logo to the the device.
+
+        Args:
+            logo: A Logo object.
+        """
+
+        start = 102400
+        end = len(logo.array)
+
+        # Send the command for writing the logo
+        write_aprom = self.hidcmd(0xC3, start, end)
+        self.write(write_aprom)
+
+        self.write(logo.array)

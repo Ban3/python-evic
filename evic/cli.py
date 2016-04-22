@@ -233,6 +233,63 @@ def upload(inputfile, encrypted, dataflashfile, noverify):
         dev.write_aprom(aprom)
 
 
+@usb.command('upload-logo')
+@click.argument('inputfile', type=click.File('rb'))
+@click.option('--invert', '-i', is_flag=True,
+              help='Invert the colors used in the image.')
+@click.option('--no-verify', 'noverify', is_flag=True,
+              help='Disable data flash verification.')
+def uploadlogo(inputfile, invert, noverify):
+    """Upload a logo to the device."""
+
+    dev = evic.HIDTransfer()
+
+    # Connect the device
+    connect(dev)
+
+    # Print the USB info of the device
+    print_usb_info(dev)
+
+    # Read the data flash
+    dataflash = read_dataflash(dev, noverify)
+    dataflash_original = copy.deepcopy(dataflash)
+
+    # Print the device information
+    print_device_info(dev, dataflash)
+
+    # Convert the image
+    try:
+        logo = evic.logo.fromimage(inputfile, invert)
+    except evic.LogoConversionError as error:
+        print(error.message)
+
+    # We want to boot to LDROM on restart
+    if not dev.ldrom:
+        dataflash.bootflag = 1
+
+    # Write data flash to the device
+    with handle_exceptions(IOError):
+        if dataflash.array != dataflash_original.array:
+            click.echo("Writing data flash...", nl=False)
+            sleep(0.1)
+            dev.write_dataflash(dataflash)
+            click.secho("OK", fg='green', bold=True)
+
+        # We should only restart if we're not in LDROM
+        if not dev.ldrom:
+            # Restart
+            click.echo("Restarting the device...", nl=False)
+            dev.reset()
+            sleep(2)
+            click.secho("OK", fg='green', nl=False, bold=True)
+            # Reconnect
+            connect(dev)
+
+        # Write logo to the device
+        click.echo("Writing logo...", nl=False)
+        dev.write_logo(logo)
+
+
 @usb.command('dump-dataflash')
 @click.option('--output', '-o', type=click.File('wb'))
 @click.option('--no-verify', 'noverify', is_flag=True,

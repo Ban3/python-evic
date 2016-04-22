@@ -245,7 +245,7 @@ class HIDTransfer(object):
         self.write(reset)
 
     def write_aprom(self, aprom):
-        """Writes the APROM to the the device.
+        """Writes the APROM to the device.
 
         Args:
             aprom: A BinFile object containing an unencrypted APROM image.

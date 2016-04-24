@@ -68,10 +68,12 @@ def fromimage(image, invert=False):
 
     # Convert to paged column-major order
     # 1 bit per pixel, 8 rows per page, LSB topmost
-    imgstrips = [img.crop((0, y, 64, y + 8)) for y in range(0, 40, 8)]
+    imgpixels = img.load()
     pagedbits = bitarray(endian='little')
-    for strip in imgstrips:
-        pagedbits += list(strip.transpose(Image.TRANSPOSE).getdata())
+    for page in range(0, 5):
+        for x in range(0, 64):
+            for y in range(0, 8):
+                pagedbits.append(imgpixels[x, page*8 + y])
 
     # Invert colors
     if invert:

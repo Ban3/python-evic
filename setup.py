@@ -33,7 +33,7 @@ REQUIREMENTS = [
     'binstruct',
     'bitarray',
     'click',
-    'pillow'
+    'pillow>=2.7.0'
 ]
 
 setup(

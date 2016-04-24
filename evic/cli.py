@@ -291,7 +291,7 @@ def uploadlogo(inputfile, invert, noverify):
 
 
 @usb.command('dump-dataflash')
-@click.option('--output', '-o', type=click.File('wb'))
+@click.option('--output', '-o', type=click.File('wb'), required=True)
 @click.option('--no-verify', 'noverify', is_flag=True,
               help='Disable verification.')
 def dumpdataflash(output, noverify):
@@ -344,7 +344,7 @@ def main():
 
 @main.command()
 @click.argument('inputfile', type=click.File('rb'))
-@click.option('--output', '-o', type=click.File('wb'))
+@click.option('--output', '-o', type=click.File('wb'), required=True)
 def convert(inputfile, output):
     """Decrypt/encrypt an APROM image."""
 

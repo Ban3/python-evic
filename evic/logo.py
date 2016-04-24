@@ -66,20 +66,23 @@ def fromimage(image, invert=False):
     # 1 bit per pixel
     bits = bitarray(list(img.getdata()))
 
-    # Convert to column-major order, 1 bit per pixel
-    img_transposed = img.transpose(Image.TRANSPOSE)
-    transposedbits = bitarray(list(img_transposed.getdata()))
+    # Convert to paged column-major order
+    # 1 bit per pixel, 8 rows per page, LSB topmost
+    imgstrips = [img.crop((0, y, 64, y + 8)) for y in range(0, 40, 8)]
+    pagedbits = bitarray(endian='little')
+    for strip in imgstrips:
+        pagedbits += list(strip.transpose(Image.TRANSPOSE).getdata())
 
     # Invert colors
     if invert:
         bits.invert()
-        transposedbits.invert()
+        pagedbits.invert()
 
     # Convert the bitarrays to bytes
     imgbytes = bits.tobytes() if hasattr(
         bits, 'tobytes') else bits.tostring()
-    transposedbytes = transposedbits.tobytes() if hasattr(
-        transposedbits, 'tobytes') else transposedbits.tostring()
+    pagedbytes = pagedbits.tobytes() if hasattr(
+        pagedbits, 'tobytes') else pagedbits.tostring()
 
     # Create a buffer for the logo
     buff = bytearray(1024)
@@ -88,6 +91,6 @@ def fromimage(image, invert=False):
 
     # Copy logo to the buffer
     buff[2:len(imgbytes) + 2] = imgbytes
-    buff[514:len(transposedbytes) + 514] = transposedbytes
+    buff[514:len(pagedbytes) + 514] = pagedbytes
 
     return Logo(buff, 0)

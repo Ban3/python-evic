@@ -116,6 +116,18 @@ class HIDTransfer(object):
             self.product = self.device.get_product_string()
             self.serial = self.device.get_serial_number_string()
 
+    def send_command(self, cmd, arg1, arg2):
+        """Sends a HID command to the device.
+
+        Args:
+            cmd: Byte long HID command
+            arg1: First argument to the command (integer)
+            arg2: Second argument to the command (integer)
+        """
+
+        command = self.hidcmd(cmd, arg1, arg2)
+        self.write(command)
+
     def read_dataflash(self):
         """Reads the device data flash.
 
@@ -129,8 +141,7 @@ class HIDTransfer(object):
         end = 2048
 
         # Send the command for reading the data flash
-        read_df = self.hidcmd(0x35, start, end)
-        self.write(read_df)
+        self.send_command(0x35, start, end)
 
         # Read the dataflash
         buf = self.read(end)
@@ -138,7 +149,7 @@ class HIDTransfer(object):
 
         # Something is wrong, try re-reading
         if dataflash.unknown1 or not dataflash.fw_version:
-            self.write(read_df)
+            self.send_command(0x35, start, end)
             buf = self.read(end)
             dataflash = DataFlash(buf[4:], 0)
 
@@ -220,8 +231,7 @@ class HIDTransfer(object):
         end = 2048
 
         # Send the command for writing the data flash
-        write_df = self.hidcmd(0x53, start, end)
-        self.write(write_df)
+        self.send_command(0x53, start, end)
 
         # Add checksum of the data in front of it
         buf = bytearray(struct.pack("=I", sum(dataflash.array))) + \
@@ -235,14 +245,26 @@ class HIDTransfer(object):
         Sends a data flash reset request to the firmware.
         """
 
-        reset_df = self.hidcmd(0x7C, 0, 0)
-        self.write(reset_df)
+        self.send_command(0x7C, 0, 0)
 
     def reset(self):
         """Sends the HID command for resetting the system (0xB4)"""
 
-        reset = self.hidcmd(0xB4, 0, 0)
-        self.write(reset)
+        self.send_command(0xB4, 0, 0)
+
+    def write_flash(self, data, start):
+        """Writes data to the flash memory.
+
+        Args:
+            start: Start address.
+        """
+
+        end = len(data)
+
+        # Send the command for writing the data
+        self.send_command(0xC3, start, end)
+
+        self.write(data)
 
     def write_aprom(self, aprom):
         """Writes the APROM to the device.
@@ -251,14 +273,7 @@ class HIDTransfer(object):
             aprom: A BinFile object containing an unencrypted APROM image.
         """
 
-        start = 0
-        end = len(aprom.data)
-
-        # Send the command for writing the APROM
-        write_aprom = self.hidcmd(0xC3, start, end)
-        self.write(write_aprom)
-
-        self.write(aprom.data)
+        self.write_flash(aprom.data, 0)
 
     def write_logo(self, logo):
         """Writes the logo to the the device.
@@ -267,11 +282,4 @@ class HIDTransfer(object):
             logo: A Logo object.
         """
 
-        start = 102400
-        end = len(logo.array)
-
-        # Send the command for writing the logo
-        write_aprom = self.hidcmd(0xC3, start, end)
-        self.write(write_aprom)
-
-        self.write(logo.array)
+        self.write_flash(logo.array, 102400)

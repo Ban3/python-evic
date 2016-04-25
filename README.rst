@@ -11,6 +11,7 @@ Supported devices
 ---------------------
 
 * Evic VTC Mini
+* Cuboid Mini
 * Cuboid
 * iStick TC100W*
 * iStick Pico*

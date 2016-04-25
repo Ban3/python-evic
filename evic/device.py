@@ -51,6 +51,7 @@ class HIDTransfer(object):
     vid = 0x0416
     pid = 0x5020
     product_names = {'E052': "eVic-VTC Mini",
+                     'E056': "CUBOID MINI",
                      'E060': "Cuboid",
                      'M011': "iStick TC100W",
                      'M041': "iStick Pico",
@@ -60,6 +61,7 @@ class HIDTransfer(object):
                      'W013': "Stout",
                      'W014': "Reuleaux RX200"}
     supported_product_ids = {'E052': ['E052', 'W007'],
+                             'E056': ['E056'],
                              'E060': ['E060'],
                              'M011': ['M011'],
                              'M041': ['M041'],

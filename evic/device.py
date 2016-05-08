@@ -151,17 +151,11 @@ class HIDTransfer(object):
         buf = self.read(end)
         dataflash = DataFlash(buf[4:], 0)
 
-        # Something is wrong, try re-reading
-        if dataflash.unknown1 or not dataflash.fw_version:
-            self.send_command(0x35, start, end)
-            buf = self.read(end)
-            dataflash = DataFlash(buf[4:], 0)
-
         # Get the checksum from the beginning of the data flash transfer
         checksum = struct.unpack('=I', bytes(buf[0:4]))[0]
 
         # Are we booted to LDROM?
-        self.ldrom = dataflash.fw_version == 0
+        self.ldrom = dataflash.ldrom_version or not dataflash.fw_version
 
         return (dataflash, checksum)
 

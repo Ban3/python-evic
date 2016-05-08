@@ -45,8 +45,7 @@ class DataFlash(binstruct.StructTemplate):
     bootflag = binstruct.Int8Field(9)
     product_id = binstruct.StringField(312, 4)
     fw_version = binstruct.Int32Field(256)
-    unknown1 = binstruct.Int32Field(260)
-    unknown2 = binstruct.Int32Field(264)
+    ldrom_version = binstruct.Int32Field(260)
 
     def verify(self, checksum):
         """Verifies the data flash against given checksum.
@@ -58,5 +57,5 @@ class DataFlash(binstruct.StructTemplate):
             DataFlashError: Data flash verification failed.
         """
 
-        if sum(self.array) != checksum or not checksum | self.unknown2:
+        if sum(self.array) != checksum:
             raise DataFlashError("Data flash verification failed.")

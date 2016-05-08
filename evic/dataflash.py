@@ -37,8 +37,7 @@ class DataFlash(binstruct.StructTemplate):
                     1 = LDROM
         product_id: Product ID string.
         fw_version: An integer firmware version number.
-        unknown1: TODO
-        unknown2: TODO
+        ldrom_version: An integer LDROM versrion number.
     """
 
     hw_version = binstruct.Int32Field(4)

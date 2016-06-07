@@ -13,6 +13,7 @@ Supported devices
 * Evic VTC Mini
 * Cuboid Mini
 * Cuboid
+* eGrip II*
 * iStick TC100W*
 * iStick Pico*
 * Presa TC75W*

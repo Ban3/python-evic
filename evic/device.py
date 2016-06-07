@@ -55,6 +55,7 @@ class HIDTransfer(object):
     product_names = {'E052': "eVic-VTC Mini",
                      'E056': "CUBOID MINI",
                      'E060': "Cuboid",
+                     'E083': "eGrip II",
                      'M011': "iStick TC100W",
                      'M041': "iStick Pico",
                      'W007': "Presa TC75W",
@@ -75,6 +76,7 @@ class HIDTransfer(object):
     supported_logo_size = {'E052': (64, 40),
                            'E056': (64, 40),
                            'E060': (64, 40),
+                           'E083': (64, 40),
                            'M041': (96, 16)}
     # 0x43444948
     hid_signature = bytearray(b'HIDC')

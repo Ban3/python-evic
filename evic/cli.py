@@ -258,10 +258,18 @@ def uploadlogo(inputfile, invert, noverify):
     print_device_info(dev, dataflash)
 
     # Convert the image
-    try:
+    with handle_exceptions(evic.LogoConversionError):
+        click.echo("Converting logo...", nl=False)
+        # Check supported logo size
+        try:
+            logosize = dev.supported_logo_size[dataflash.product_id]
+        except KeyError:
+            raise evic.LogoConversionError("Device doesn't support logos.")
+        # Perform the actual conversion
         logo = evic.logo.fromimage(inputfile, invert)
-    except evic.LogoConversionError as error:
-        print(error.message)
+        if (logo.width, logo.height) != logosize:
+            raise evic.LogoConversionError("Device only supports {}x{} logos."
+                                           .format(*logosize))
 
     # We want to boot to LDROM on restart
     if not dev.ldrom:

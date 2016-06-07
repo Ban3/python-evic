@@ -39,6 +39,8 @@ class HIDTransfer(object):
         supported_product_ids: A dictionary mapping product ID to a list of
                                strings containing the IDs of the products
                                with compatible firmware.
+        supported_logo_size: A dictionary mapping product ID to the allowed
+                             logo resolution as a (width, height) tuple.
         hid_signature: A bytearray containing the HID command signature
                        (4 bytes).
         device: A HIDAPI device.
@@ -70,6 +72,10 @@ class HIDTransfer(object):
                              'W011': ['W011'],
                              'W013': ['W013'],
                              'W014': ['W014']}
+    supported_logo_size = {'E052': (64, 40),
+                           'E056': (64, 40),
+                           'E060': (64, 40),
+                           'M041': (96, 16)}
     # 0x43444948
     hid_signature = bytearray(b'HIDC')
 

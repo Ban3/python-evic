@@ -53,10 +53,12 @@ def fromimage(image, invert=False):
 
     img = Image.open(image)
 
-    if img.size != (64, 40):
-        raise LogoConversionError("Image dimensions must be 64x40.")
-
     width, height = img.size
+
+    if width % 8 != 0 or height % 8 != 0:
+        raise LogoConversionError("Image dimensions must be multiples of 8.")
+    if width * height > 4080:
+        raise LogoConversionError("Image is too big.")
 
     # Convert to b/w
     if img.mode != '1':
@@ -70,8 +72,8 @@ def fromimage(image, invert=False):
     # 1 bit per pixel, 8 rows per page, LSB topmost
     imgpixels = img.load()
     pagedbits = bitarray(endian='little')
-    for page in range(0, 5):
-        for x in range(0, 64):
+    for page in range(0, height / 8):
+        for x in range(0, width):
             for y in range(0, 8):
                 pagedbits.append(imgpixels[x, page*8 + y])
 

@@ -62,7 +62,8 @@ class HIDTransfer(object):
                      'W010': "Classic",
                      'W011': "Lite",
                      'W013': "Stout",
-                     'W014': "Reuleaux RX200"}
+                     'W014': "Reuleaux RX200",
+                     'W033': "Reuleaux RX200S"}
     supported_product_ids = {'E052': ['E052', 'W007'],
                              'E056': ['E056'],
                              'E060': ['E060'],
@@ -72,7 +73,8 @@ class HIDTransfer(object):
                              'W010': ['W010'],
                              'W011': ['W011'],
                              'W013': ['W013'],
-                             'W014': ['W014']}
+                             'W014': ['W014'],
+                             'W033': ['W033']}
     supported_logo_size = {'E052': (64, 40),
                            'E056': (64, 40),
                            'E060': (64, 40),

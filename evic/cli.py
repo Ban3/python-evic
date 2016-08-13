@@ -29,6 +29,7 @@ import click
 
 import evic
 
+from .device import DeviceInfo
 
 @contextmanager
 def handle_exceptions(*exceptions):
@@ -107,21 +108,17 @@ def read_dataflash(dev, verify):
     return dataflash
 
 
-def print_device_info(dev, dataflash):
+def print_device_info(device_info, dataflash):
     """Prints the device information found from data flash.
 
     Args:
-        dev: evic.HIDTransfer object.
+        device_info: device.DeviceInfo tuple.
         dataflash: evic.DataFlash object.
     """
 
-    # Find the product name
-    product_name = dev.product_names.get(dataflash.product_id,
-                                         "Unknown device")
-
     # Print out the information
     click.echo("\tDevice name: ", nl=False)
-    click.secho(product_name, bold=True)
+    click.secho(device_info.name, bold=True)
     click.echo("\tFirmware version: ", nl=False)
     click.secho("{0:.2f}".format(dataflash.fw_version / 100.0), bold=True)
     click.echo("\tHardware version: ", nl=False)
@@ -170,8 +167,12 @@ def upload(inputfile, encrypted, dataflashfile, noverify):
     dataflash = read_dataflash(dev, verify)
     dataflash_original = copy.deepcopy(dataflash)
 
+    # Get the device info
+    device_info = dev.devices.get(dataflash.product_id,
+                                  DeviceInfo("Unknown device", None, None))
+
     # Print the device information
-    print_device_info(dev, dataflash)
+    print_device_info(device_info, dataflash)
 
     # Read the APROM image
     aprom = evic.APROM(inputfile.read())
@@ -182,9 +183,12 @@ def upload(inputfile, encrypted, dataflashfile, noverify):
     if 'aprom' not in noverify:
         with handle_exceptions(evic.APROMError):
             click.echo("Verifying APROM...", nl=False)
-            aprom.verify(
-                dev.supported_product_ids[dataflash.product_id],
-                dataflash.hw_version)
+
+            supported_product_ids = [dataflash.product_id]
+            if device_info.supported_product_ids:
+                supported_product_ids.extend(device_info.supported_product_ids)
+
+            aprom.verify(supported_product_ids, dataflash.hw_version)
 
     # Are we using a data flash file?
     if dataflashfile:
@@ -254,22 +258,27 @@ def uploadlogo(inputfile, invert, noverify):
     dataflash = read_dataflash(dev, noverify)
     dataflash_original = copy.deepcopy(dataflash)
 
+    # Get the device info
+    device_info = dev.devices.get(dataflash.product_id,
+                                  DeviceInfo("Unknown device", None, None))
+
     # Print the device information
-    print_device_info(dev, dataflash)
+    print_device_info(device_info, dataflash)
 
     # Convert the image
     with handle_exceptions(evic.LogoConversionError):
         click.echo("Converting logo...", nl=False)
-        # Check supported logo size
-        try:
-            logosize = dev.supported_logo_size[dataflash.product_id]
-        except KeyError:
+
+        # Check supported logo dimensions
+        logo_dimensions = device_info.logo_dimensions
+        if not logo_dimensions:
             raise evic.LogoConversionError("Device doesn't support logos.")
+
         # Perform the actual conversion
         logo = evic.logo.fromimage(inputfile, invert)
-        if (logo.width, logo.height) != logosize:
+        if (logo.width, logo.height) != logo_dimensions:
             raise evic.LogoConversionError("Device only supports {}x{} logos."
-                                           .format(*logosize))
+                                           .format(*logo_dimensions))
 
     # We want to boot to LDROM on restart
     if not dev.ldrom:
@@ -316,8 +325,12 @@ def dumpdataflash(output, noverify):
     # Read the data flash
     dataflash = read_dataflash(dev, noverify)
 
+    # Get the device info
+    device_info = dev.devices.get(dataflash.product_id,
+                                  DeviceInfo("Unknown device", None, None))
+
     # Print the device information
-    print_device_info(dev, dataflash)
+    print_device_info(device_info, dataflash)
 
     # Write the data flash to the file
     with handle_exceptions(IOError):

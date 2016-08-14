@@ -49,17 +49,26 @@ class HIDTransfer(object):
 
     vid = 0x0416
     pid = 0x5020
-    devices = {'E052': DeviceInfo("eVic-VTC Mini", ['W007'], (64, 40)),
+    devices = {'E043': DeviceInfo("eVic VTwo", None, (64, 40)),
+               'E052': DeviceInfo("eVic-VTC Mini", ['W007'], (64, 40)),
                'E056': DeviceInfo("CUBOID MINI", None, (64, 40)),
                'E060': DeviceInfo("Cuboid", None, (64, 40)),
                'E083': DeviceInfo("eGrip II", None, (64, 40)),
+               'E092': DeviceInfo("eVic AIO", None, (64, 40)),
+               'E115': DeviceInfo("eVic VTwo mini", None, (64, 40)),
+               'E150': DeviceInfo("eVic Basic", None, (64, 40)),
                'M011': DeviceInfo("iStick TC100W", None, None),
+               'M037': DeviceInfo("ASTER", None, (96, 16)),
                'M041': DeviceInfo("iStick Pico", None, (96, 16)),
+               'M045': DeviceInfo("iStick Pico Mega", None, (96, 16)),
+               'M046': DeviceInfo("iPower", None, (96, 16)),
                'W007': DeviceInfo("Presa TC75W", ['E052'], None),
                'W010': DeviceInfo("Classic", None, None),
                'W011': DeviceInfo("Lite", None, None),
                'W013': DeviceInfo("Stout", None, None),
                'W014': DeviceInfo("Reuleaux RX200", None, None),
+               'W016': DeviceInfo("CENTURION", None, None),
+               'W018': DeviceInfo("Reuleaux RX2/3", None, (64, 48)),
                'W033': DeviceInfo("Reuleaux RX200S", None, None)
               }
 

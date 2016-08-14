@@ -10,25 +10,36 @@ Evic is a USB programmer for devices based on the Joyetech Evic VTC Mini.
 Supported devices
 ---------------------
 
+* eVic VTwo*
 * Evic VTC Mini
 * Cuboid Mini
 * Cuboid
 * eGrip II*
+* eVic AIO*
+* eVic VTwo mini*
+* eVic Basic*
 * iStick TC100W*
-* iStick Pico*
+* ASTER*
+* iStick Pico
+* iStick Pico Mega*
+* iPower*
 * Presa TC75W*
 * Vaporflask Classic*
 * Vaporflask Lite*
 * Vaporflask Stout*
 * Reuleaux RX200*
+* CENTURION*
+* Reuleaux RX2/3*
+* Reuleaux RX200S*
 
 \*Untested
 
 Tested firmware versions
 -----------------------------
 
-* Evic VTC Mini <=3.02
+* Evic VTC Mini <=3.03
 * Presa TC75W 1.02\*
+* iStick Pico 1.01
 * Examples from `evic-sdk <https://github.com/ReservedField/evic-sdk>`_
 
 \*Flashing Presa firmware to a VTC Mini requires changing the hardware version

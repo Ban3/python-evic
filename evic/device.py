@@ -53,6 +53,7 @@ class HIDTransfer(object):
                'E052': DeviceInfo("eVic-VTC Mini", ['W007'], (64, 40)),
                'E056': DeviceInfo("CUBOID MINI", None, (64, 40)),
                'E060': DeviceInfo("Cuboid", None, (64, 40)),
+               'E079': DeviceInfo("eVic VTC Dual", None, (64, 40)),
                'E083': DeviceInfo("eGrip II", None, (64, 40)),
                'E092': DeviceInfo("eVic AIO", None, (64, 40)),
                'E115': DeviceInfo("eVic VTwo mini", None, (64, 40)),

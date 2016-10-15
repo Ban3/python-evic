@@ -14,6 +14,7 @@ Supported devices
 * Evic VTC Mini
 * Cuboid Mini
 * Cuboid
+* eVic VTC Dual*
 * eGrip II*
 * eVic AIO*
 * eVic VTwo mini*
